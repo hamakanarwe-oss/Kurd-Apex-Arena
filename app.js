@@ -1,81 +1,219 @@
 lucide.createIcons();
 
-let balance = KX_CONFIG.initialBalance;
-let currentGeneratedOTP = "";
+// پەیوەندی ڕاستەقینە بە Supabase
+const sb = window.supabase.createClient(KX_CONFIG.supabaseUrl, KX_CONFIG.supabaseKey);
+
+let currentUser = null;
+let balance = 0;
 let selectedReceiptFile = null;
 let selectedMediaData = null;
 let selectedMediaType = 'image';
 let isMicMuted = false;
-let isRoomLocked = false;
 
 document.getElementById('fibNumberDisplay').innerText = KX_CONFIG.fibNumber;
-updateBalanceUI();
+
+// پشکنینی خۆکار: ئەگەر یاریزان پێشتر چووبێتە ژوورەوە، ڕاستەوخۆ هەژمارەکەی دەهێنێتەوە
+async function checkExistingSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await loadUserProfile(session.user);
+  }
+}
+
+// ١. تۆمارکردنی هەژماری نوێ + ڤێریفای ڕاستەقینە بۆ ئیمەیڵ + مەرجی توندی ژمارە مۆبایل
+async function registerRealAccount() {
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value.trim();
+  const uname = document.getElementById('regUsername').value.trim();
+  const rawPhone = document.getElementById('regPhone').value.trim().replace(/\s+/g, '');
+
+  // مەرجی ١: ئیمەیڵ و پاسۆرد
+  if (!email.includes('@') || !email.includes('.')) {
+    return showAuthError('تکایە ئیمەیڵێکی دروست بنووسە (نموونە: name@gmail.com).');
+  }
+  if (pass.length < 6) {
+    return showAuthError('پاسۆرد دەبێت لانیکەم ٦ پیت یان ژمارە بێت.');
+  }
+
+  // مەرجی ٢: ناوی یوزەر
+  if (uname.length < 3 || !/^[a-zA-Z0-9_]+$/.test(uname)) {
+    return showAuthError('ناوی یوزەر دەبێت بە ئینگلیزی بێت (لانیکەم ٣ پیت، تەنها پیت و ژمارە و _).');
+  }
+
+  // مەرجی ٣: ژمارەی مۆبایلی ڕاستەقینەی عێراق و کوردستان (077, 075, 078 و ڕێک ١١ ژمارە)
+  const phoneNormalized = rawPhone.startsWith('0') ? rawPhone : '0' + rawPhone;
+  if (!/^07[578]\d{8}$/.test(phoneNormalized)) {
+    return showAuthError('ژمارەی مۆبایل هەڵەیە! دەبێت بە 077 یان 075 یان 078 دەستپێبکات و ١١ ژمارە بێت.');
+  }
+
+  // پشکنین لە داتابەیس کە ئایا ئەم ناوی یوزەر یان ژمارە مۆبایلە پێشتر گیراوە یان نا
+  const { data: existingUser } = await sb.from('profiles').select('username, phone').or(`username.eq.${uname},phone.eq.${phoneNormalized}`);
+  if (existingUser && existingUser.length > 0) {
+    return showAuthError('ئەم ناوی یوزەرە یان ژمارە مۆبایلە پێشتر تۆمارکراوە! دانەیەکی تر هەڵبژێرە.');
+  }
+
+  setAuthLoading(true);
+
+  // ناردنی داواکاری دروستکردنی هەژمار بۆ Supabase (کۆدی ڤێریفای دەنێرێت بۆ ئیمەیڵەکە)
+  const { data, error } = await sb.auth.signUp({
+    email: email,
+    password: pass,
+    options: {
+      data: { username: uname, phone: phoneNormalized }
+    }
+  });
+
+  setAuthLoading(false);
+
+  if (error) {
+    return showAuthError('هەڵە: ' + error.message);
+  }
+
+  // ئەگەر Supabase داوای ڤێریفای ئیمەیڵی کرد (کە کۆد دەنێرێت بۆ ئیمەیڵەکەی)
+  if (data.user && !data.session) {
+    document.getElementById('authRegisterBox').classList.add('hidden');
+    document.getElementById('authVerifyBox').classList.remove('hidden');
+    document.getElementById('verifyEmailTarget').innerText = email;
+  } else if (data.session) {
+    await createProfileRow(data.user, uname, phoneNormalized);
+    await loadUserProfile(data.user);
+  }
+}
+
+// سەلماندنی کۆدی ٦ ژمارەیی کە چووە بۆ ئیمەیڵەکە
+async function verifyEmailOTP() {
+  const email = document.getElementById('regEmail').value.trim();
+  const token = document.getElementById('otpInput').value.trim();
+  const uname = document.getElementById('regUsername').value.trim();
+  const rawPhone = document.getElementById('regPhone').value.trim().replace(/\s+/g, '');
+  const phoneNormalized = rawPhone.startsWith('0') ? rawPhone : '0' + rawPhone;
+
+  if (token.length < 6) {
+    return showAuthError('تکایە کۆدە ٦ ژمارەییەکە بنووسە کە نێردراوە بۆ ئیمەیڵەکەت.');
+  }
+
+  setAuthLoading(true);
+  const { data, error } = await sb.auth.verifyOtp({
+    email: email,
+    token: token,
+    type: 'signup'
+  });
+  setAuthLoading(false);
+
+  if (error) {
+    return showAuthError('کۆدی ڤێریفای هەڵەیە یان بەسەرچووە! ئیمەیڵەکەت بپشکنە.');
+  }
+
+  if (data.user) {
+    await createProfileRow(data.user, uname, phoneNormalized);
+    await loadUserProfile(data.user);
+  }
+}
+
+// چوونەژوورەوە بۆ کەسێک کە پێشتر هەژماری هەبووە
+async function loginRealAccount() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  if (!email || !pass) return showAuthError('ئیمەیڵ و پاسۆرد بنووسە.');
+
+  setAuthLoading(true);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  setAuthLoading(false);
+
+  if (error) return showAuthError('ئیمەیڵ یان پاسۆرد هەڵەیە، یان هەژمارەکەت هێشتا ڤێریفای نەکراوە.');
+  await loadUserProfile(data.user);
+}
+
+async function createProfileRow(user, username, phone) {
+  await sb.from('profiles').upsert({
+    id: user.id,
+    username: username,
+    phone: phone,
+    balance: KX_CONFIG.initialBalance
+  });
+}
+
+async function loadUserProfile(user) {
+  currentUser = user;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+  if (profile) {
+    balance = profile.balance;
+    document.getElementById('headerUsername').innerText = profile.username;
+    document.getElementById('editUsernameInput').value = profile.username;
+    document.getElementById('voiceMyName').innerText = profile.username;
+    if (profile.avatar_url) {
+      document.getElementById('headerAvatar').src = profile.avatar_url;
+      document.getElementById('modalAvatar').src = profile.avatar_url;
+      document.getElementById('voiceMyAvatar').src = profile.avatar_url;
+    }
+  } else {
+    const meta = user.user_metadata || {};
+    await createProfileRow(user, meta.username || 'Player', meta.phone || '07700000000');
+    balance = KX_CONFIG.initialBalance;
+  }
+
+  updateBalanceUI();
+  await loadUserDeposits();
+  document.getElementById('authScreen').classList.add('hidden');
+}
+
+async function logoutAccount() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authErrorBox');
+  el.innerText = msg;
+  el.classList.remove('hidden');
+}
+
+function setAuthLoading(isLoading) {
+  document.getElementById('authLoader').classList.toggle('hidden', !isLoading);
+  document.getElementById('authErrorBox').classList.add('hidden');
+}
+
+function toggleAuthMode(mode) {
+  document.getElementById('authErrorBox').classList.add('hidden');
+  document.getElementById('authRegisterBox').classList.toggle('hidden', mode !== 'register');
+  document.getElementById('authLoginBox').classList.toggle('hidden', mode !== 'login');
+}
 
 function updateBalanceUI() {
   document.getElementById('walletBalance').innerText = balance.toLocaleString() + " IQD";
   document.getElementById('walletMainDisplay').innerText = balance.toLocaleString() + " IQD";
 }
 
-// ١. چوونەژوورەوە و ڤێریفای توند (Strict 6-Digit OTP)
-function goToStep2() {
-  const email = document.getElementById('regEmail').value.trim();
-  const pass = document.getElementById('regPass').value.trim();
-  if (!email.includes('@') || pass.length < 6) {
-    return alert('تکایە ئیمەیڵێکی دروست و پاسۆردێک بنووسە کە لە ٦ پیت کەمتر نەبێت.');
-  }
-  document.getElementById('authStep1').classList.add('hidden');
-  document.getElementById('authStep2').classList.remove('hidden');
-}
-
-function sendOTPCode() {
-  const uname = document.getElementById('regUsername').value.trim();
-  const phone = document.getElementById('regPhone').value.trim();
-  if (!uname || phone.length < 7) {
-    return alert('تکایە ناوی یوزەر و ژمارە مۆبایل بە دروستی بنووسە.');
-  }
-  currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-  document.getElementById('generatedOtpDisplay').innerText = currentGeneratedOTP;
-  document.getElementById('authStep2').classList.add('hidden');
-  document.getElementById('authStep3').classList.remove('hidden');
-}
-
-function completeAuth() {
-  const typed = document.getElementById('otpInput').value.trim();
-  if (typed !== currentGeneratedOTP) {
-    document.getElementById('otpError').classList.remove('hidden');
-    return;
-  }
-  document.getElementById('otpError').classList.add('hidden');
-  const uname = document.getElementById('regUsername').value.trim();
-  document.getElementById('headerUsername').innerText = uname;
-  document.getElementById('editUsernameInput').value = uname;
-  document.getElementById('voiceMyName').innerText = uname;
-  document.getElementById('authScreen').classList.add('hidden');
-}
-
-// ٢. پرۆفایل
+// ٢. پرۆفایل (پاشەکەوتکردن لە Supabase)
 function uploadProfilePic(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('headerAvatar').src = e.target.result;
-    document.getElementById('modalAvatar').src = e.target.result;
-    document.getElementById('voiceMyAvatar').src = e.target.result;
+  reader.onload = async e => {
+    const base64Img = e.target.result;
+    document.getElementById('headerAvatar').src = base64Img;
+    document.getElementById('modalAvatar').src = base64Img;
+    document.getElementById('voiceMyAvatar').src = base64Img;
+    if (currentUser) {
+      await sb.from('profiles').update({ avatar_url: base64Img }).eq('id', currentUser.id);
+    }
   };
   reader.readAsDataURL(file);
 }
 
-function saveProfile() {
+async function saveProfile() {
   const newName = document.getElementById('editUsernameInput').value.trim();
-  if (newName) {
+  if (newName && currentUser) {
+    const { error } = await sb.from('profiles').update({ username: newName }).eq('id', currentUser.id);
+    if (error) return alert('ئەم ناوی یوزەرە پێشتر گیراوە!');
     document.getElementById('headerUsername').innerText = newName;
     document.getElementById('voiceMyName').innerText = newName;
   }
   closeModal('profileModal');
 }
 
-// ٣. ڕادیۆی GTA VI (Blood In Your Eyes + گۆڕین + لابردنی خۆکار لە ڤۆیس کۆڵ)
+// ٣. ڕادیۆی GTA VI
 let trackIdx = 0;
 const radioAudio = new Audio(KX_CONFIG.tracks[0].url);
 radioAudio.loop = true;
@@ -124,7 +262,7 @@ function switchTab(tabName) {
   }
 }
 
-// ٥. پڕکردنەوەی باڵانس تەنها بە پسوولەی FIB (Receipt Required)
+// ٥. پڕکردنەوەی باڵانس تەنها بە پسوولەی FIB (پاشەکەوت دەبێت لە Supabase)
 function previewReceipt(event) {
   selectedReceiptFile = event.target.files[0];
   if (selectedReceiptFile) {
@@ -132,7 +270,7 @@ function previewReceipt(event) {
   }
 }
 
-function handleDeposit() {
+async function handleDeposit() {
   const amt = parseInt(document.getElementById('depositInput').value);
   const txId = document.getElementById('txRefInput').value.trim();
 
@@ -140,37 +278,58 @@ function handleDeposit() {
   if (!txId || txId.length < 4) return alert('ژمارەی مامەڵە (Transaction ID) بنووسە.');
   if (!selectedReceiptFile) return alert('ناتوانیت باڵانس زیاد بکەیت بێ بارکردنی وێنەی پسوولەی FIB!');
 
-  const lang = document.getElementById('langSelect').value;
-  const pendingTxt = translations[lang].pendingReview;
+  const { error } = await sb.from('deposits').insert({
+    user_id: currentUser.id,
+    amount: amt,
+    tx_id: txId,
+    receipt_name: selectedReceiptFile.name,
+    status: 'pending'
+  });
 
-  document.getElementById('receiptsHistory').innerHTML = `
-    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex justify-between items-center text-[11px]">
-      <div>
-        <span class="font-bold text-white block">FIB: ${amt.toLocaleString()} IQD</span>
-        <span class="text-gray-400 font-mono">TX: #${txId}</span>
-      </div>
-      <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">${pendingTxt}</span>
-    </div>` + document.getElementById('receiptsHistory').innerHTML;
+  if (error) return alert('هەڵە: ئەم ژمارە مامەڵەیە (Transaction ID) پێشتر بەکارهاتووە!');
 
   document.getElementById('depositInput').value = '';
   document.getElementById('txRefInput').value = '';
   selectedReceiptFile = null;
-  document.getElementById('receiptFileName').innerText = translations[lang].uploadReceipt;
-  alert('پسوولەکەت تۆمارکرا! دوای پشکنینی لەلایەن ئەدمینەوە باڵانسەکەت بۆ زیاد دەکرێت.');
+  document.getElementById('receiptFileName').innerText = 'وێنەی پسوولەی FIB هەڵبژێرە (پێویستە)';
+  await loadUserDeposits();
+  alert('پسوولەکەت لە داتابەیس تۆمارکرا! دوای پشکنین باڵانسەکەت زیاد دەبێت.');
 }
 
-function handleTransfer() {
-  const user = document.getElementById('transferUser').value.trim();
+async function loadUserDeposits() {
+  if (!currentUser) return;
+  const { data } = await sb.from('deposits').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  if (!data) return;
+  document.getElementById('receiptsHistory').innerHTML = data.map(d => `
+    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex justify-between items-center text-[11px]">
+      <div>
+        <span class="font-bold text-white block">FIB: ${d.amount.toLocaleString()} IQD</span>
+        <span class="text-gray-400 font-mono">TX: #${d.tx_id}</span>
+      </div>
+      <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">${d.status === 'approved' ? 'پەسەندکرا ✅' : 'لە ژێر پشکنیندایە'}</span>
+    </div>
+  `).join('');
+}
+
+async function handleTransfer() {
+  const targetUser = document.getElementById('transferUser').value.trim();
   const amt = parseInt(document.getElementById('transferAmount').value);
-  if (!user || !amt || amt > balance) return alert('زانیارییەکان هەڵەن یان باڵانس بەش ناکات.');
+  if (!targetUser || !amt || amt < 1000 || amt > balance) return alert('زانیارییەکان هەڵەن یان باڵانس بەش ناکات.');
+
+  const { data: recipient } = await sb.from('profiles').select('id, balance').eq('username', targetUser).single();
+  if (!recipient) return alert('ئەم ناوی یوزەرە بوونی نییە لە KX Arena!');
+
   balance -= amt;
+  await sb.from('profiles').update({ balance: balance }).eq('id', currentUser.id);
+  await sb.from('profiles').update({ balance: recipient.balance + amt }).eq('id', recipient.id);
+
   updateBalanceUI();
   document.getElementById('transferUser').value = '';
   document.getElementById('transferAmount').value = '';
-  alert(`بڕی ${amt.toLocaleString()} IQD حەواڵە کرا بۆ ${user}`);
+  alert(`بڕی ${amt.toLocaleString()} IQD حەواڵە کرا بۆ ${targetUser}`);
 }
 
-// ٦. ئیڤێنتەکان و ژماردنی پێچەوانە
+// ٦. ئیڤێنتەکان و بەشداریکردنی ڕاستەقینە
 function renderEvents() {
   const lang = document.getElementById('langSelect').value;
   document.getElementById('eventsContainer').innerHTML = KX_CONFIG.events.map(ev => `
@@ -229,14 +388,15 @@ setInterval(() => {
   });
 }, 1000);
 
-function joinEvent(cost) {
+async function joinEvent(cost) {
   if (balance < cost) return alert('باڵانسی پێویستت نییە!');
   balance -= cost;
+  await sb.from('profiles').update({ balance: balance }).eq('id', currentUser.id);
   updateBalanceUI();
   alert('بە سەرکەوتوویی تۆمارکرایت لە خولەکەدا!');
 }
 
-// ٧. پۆستی وێنە و ڤیدیۆ (Media Feed)
+// ٧. پۆستی وێنە و ڤیدیۆ
 const mediaPosts = [{
   user: "KurdApex_Pro",
   avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80",
@@ -244,7 +404,7 @@ const mediaPosts = [{
   mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80",
   caption: "ئامادەکارییەکان بۆ خولی گەورەی ئەم هەفتەیە",
   likes: 48,
-  comments: ["شازە!", "بەهیوای سەرکەوتن"]
+  comments: ["شازە!"]
 }];
 
 function handleMediaSelect(event) {
@@ -269,7 +429,6 @@ function publishMediaPost() {
     comments: []
   });
   selectedMediaData = null;
-  document.getElementById('postCaptionInput').value = '';
   closeModal('newPostModal');
   renderMediaFeed();
 }
@@ -300,14 +459,13 @@ function renderMediaFeed() {
             <i data-lucide="message-circle" class="w-4 h-4"></i> <span>${p.comments.length} ${translations[lang].commentBtn}</span>
           </button>
         </div>
-        ${p.comments.length ? `<div class="bg-black/30 rounded-xl p-2 space-y-1 text-[11px] text-gray-300">${p.comments.map(c => `<div>• ${c}</div>`).join('')}</div>` : ''}
       </div>
     </div>
   `).join('');
   lucide.createIcons();
 }
 
-// ٨. ژوورە دەنگییە پڕۆفیشناڵەکان (Voice Rooms + Chat + Mic + Lock + Raise Hand)
+// ٨. ژوورە دەنگییەکان
 function renderVoiceRooms() {
   const lang = document.getElementById('langSelect').value;
   document.getElementById('voiceRoomsList').innerHTML = KX_CONFIG.voiceRooms.map(r => `
@@ -325,7 +483,7 @@ function renderVoiceRooms() {
 function createNewVoiceRoom() {
   const rName = prompt("ناوی ژوورە دەنگییە نوێیەکەت بنووسە:");
   if (!rName) return;
-  KX_CONFIG.voiceRooms.unshift({ id: Date.now(), name: rName, count: 1, tag: "Live Room", locked: false });
+  KX_CONFIG.voiceRooms.unshift({ id: Date.now(), name: rName, count: 1, tag: "Live" });
   renderVoiceRooms();
   joinVoiceRoom(rName);
 }
@@ -333,7 +491,6 @@ function createNewVoiceRoom() {
 function joinVoiceRoom(name) {
   document.getElementById('activeRoomName').innerText = name;
   document.getElementById('activeVoicePanel').classList.remove('hidden');
-  document.getElementById('voiceChatMessages').innerHTML = `<div class="text-[10px] text-purple-300">بەخێربێیت بۆ ژووری ${name}</div>`;
 }
 
 function leaveVoiceRoom() {
@@ -342,22 +499,8 @@ function leaveVoiceRoom() {
 
 function toggleMic(btn) {
   isMicMuted = !isMicMuted;
-  const ring = document.getElementById('voiceMyAvatar');
-  if (isMicMuted) {
-    btn.classList.replace('text-emerald-400', 'text-red-400');
-    btn.querySelector('span').innerText = "Muted";
-    ring.classList.remove('speaking-ring');
-  } else {
-    btn.classList.replace('text-red-400', 'text-emerald-400');
-    btn.querySelector('span').innerText = "Mic On";
-    ring.classList.add('speaking-ring');
-  }
-}
-
-function toggleRoomLock(btn) {
-  isRoomLocked = !isRoomLocked;
-  btn.classList.toggle('text-amber-400');
-  alert(isRoomLocked ? "ژوورەکە قفڵ کرا" : "ژوورەکە کرایەوە");
+  btn.classList.toggle('text-emerald-400', !isMicMuted);
+  btn.classList.toggle('text-red-400', isMicMuted);
 }
 
 function sendVoiceChat() {
@@ -367,48 +510,14 @@ function sendVoiceChat() {
   const myName = document.getElementById('headerUsername').innerText;
   const box = document.getElementById('voiceChatMessages');
   box.innerHTML += `<div class="text-[11px]"><strong class="text-pink-400">${myName}:</strong> <span class="text-gray-200">${msg}</span></div>`;
-  box.scrollTop = box.scrollHeight;
   input.value = '';
 }
 
-// ٩. گۆڕینی تەواوەتی زمانەکان (کوردی، عەرەبی، ئینگلیزی)
+// ٩. زمانەکان
 const translations = {
-  ku: {
-    balance: "باڵانس", srvKurd: "سێرڤەری کوردی", srvIraq: "سێرڤەری عێراقی", srvEu: "سێرڤەری ئەوروپی",
-    eventsTitle: "ئیڤێنت و پاڵەوانێتییەکان", newsTitle: "هەواڵ و زانیاری", walletTitle: "جزدانی دارایی",
-    postsTitle: "کلیپ و وێنە", voiceTitle: "ژوورە دەنگییەکان", navNews: "هەواڵ", navWallet: "جزدان",
-    navEvents: "ئیڤێنتەکان", navPosts: "پۆست", navVoice: "ژووری دەنگی", timeRemaining: "کاتی ماوە بۆ دەستپێکردن",
-    prizeLabel: "خەڵات", joinBtn: "بەشداریکردن", uploadReceipt: "وێنەی پسوولەی FIB هەڵبژێرە (پێویستە)",
-    submitDeposit: "ناردنی پسوولە بۆ پشکنین", pendingReview: "لە ژێر پشکنیندایە", sendTransfer: "ناردنی حەواڵە",
-    addMediaBtn: "بڵاوکردنەوە", commentBtn: "کۆمێنت", createRoomBtn: "دروستکردنی ژوور",
-    playersOnline: "یاریزان", joinRoomBtn: "چوونە ژوورەوە", leaveBtn: "دەرچوون",
-    profileSettings: "ڕێکخستنی پرۆفایل", saveBtn: "پاشەکەوتکردن", postModalTitle: "بڵاوکردنەوەی وێنە یان ڤیدیۆ",
-    selectMedia: "وێنە یان ڤیدیۆ هەڵبژێرە", publishBtn: "بڵاوکردنەوە"
-  },
-  ar: {
-    balance: "الرصيد", srvKurd: "سيرفر كردستان", srvIraq: "السيرفر العراقي", srvEu: "السيرفر الأوروبي",
-    eventsTitle: "البطولات والأحداث", newsTitle: "الأخبار والمعلومات", walletTitle: "المحفظة المالية",
-    postsTitle: "مقاطع وصور", voiceTitle: "الغرف الصوتية", navNews: "الأخبار", navWallet: "المحفظة",
-    navEvents: "البطولات", navPosts: "المنشورات", navVoice: "غرف صوتية", timeRemaining: "الوقت المتبقي للبدء",
-    prizeLabel: "الجائزة", joinBtn: "مشاركة", uploadReceipt: "اختر صورة إيصال FIB (إلزامي)",
-    submitDeposit: "إرسال الإيصال للمراجعة", pendingReview: "قيد المراجعة", sendTransfer: "إرسال التحويل",
-    addMediaBtn: "نشر ميديا", commentBtn: "تعليق", createRoomBtn: "إنشاء غرفة",
-    playersOnline: "لاعب", joinRoomBtn: "دخول الغرفة", leaveBtn: "مغادرة",
-    profileSettings: "إعدادات الملف الشخصي", saveBtn: "حفظ التغييرات", postModalTitle: "نشر صورة أو فيديو",
-    selectMedia: "اختر صورة أو فيديو", publishBtn: "نشر الآن"
-  },
-  en: {
-    balance: "Balance", srvKurd: "Kurdistan Server", srvIraq: "Iraq Server", srvEu: "Europe Server",
-    eventsTitle: "Tournaments & Events", newsTitle: "News & Info", walletTitle: "Financial Wallet",
-    postsTitle: "Clips & Media", voiceTitle: "Voice Rooms", navNews: "News", navWallet: "Wallet",
-    navEvents: "Events", navPosts: "Feed", navVoice: "Voice", timeRemaining: "Starts In",
-    prizeLabel: "Prize Pool", joinBtn: "Join Now", uploadReceipt: "Upload FIB Receipt (Required)",
-    submitDeposit: "Submit Receipt", pendingReview: "Pending Review", sendTransfer: "Send Transfer",
-    addMediaBtn: "Post Media", commentBtn: "Comments", createRoomBtn: "Create Room",
-    playersOnline: "Online", joinRoomBtn: "Join Room", leaveBtn: "Leave",
-    profileSettings: "Profile Settings", saveBtn: "Save Changes", postModalTitle: "Upload Photo or Video",
-    selectMedia: "Select Photo or Video", publishBtn: "Publish"
-  }
+  ku: { balance: "باڵانس", srvKurd: "سێرڤەری کوردی", srvIraq: "سێرڤەری عێراقی", srvEu: "سێرڤەری ئەوروپی", eventsTitle: "ئیڤێنت و پاڵەوانێتییەکان", newsTitle: "هەواڵ و زانیاری", walletTitle: "جزدانی دارایی", postsTitle: "کلیپ و وێنە", voiceTitle: "ژوورە دەنگییەکان", navNews: "هەواڵ", navWallet: "جزدان", navEvents: "ئیڤێنتەکان", navPosts: "پۆست", navVoice: "ژووری دەنگی", timeRemaining: "کاتی ماوە بۆ دەستپێکردن", prizeLabel: "خەڵات", joinBtn: "بەشداریکردن", commentBtn: "کۆمێنت", playersOnline: "یاریزان", joinRoomBtn: "چوونە ژوورەوە" },
+  ar: { balance: "الرصيد", srvKurd: "سيرفر كردستان", srvIraq: "السيرفر العراقي", srvEu: "السيرفر الأوروبي", eventsTitle: "البطولات والأحداث", newsTitle: "الأخبار والمعلومات", walletTitle: "المحفظة المالية", postsTitle: "مقاطع وصور", voiceTitle: "الغرف الصوتية", navNews: "الأخبار", navWallet: "المحفظة", navEvents: "البطولات", navPosts: "المنشورات", navVoice: "غرف صوتية", timeRemaining: "الوقت المتبقي", prizeLabel: "الجائزة", joinBtn: "مشاركة", commentBtn: "تعليق", playersOnline: "لاعب", joinRoomBtn: "دخول" },
+  en: { balance: "Balance", srvKurd: "Kurdistan Server", srvIraq: "Iraq Server", srvEu: "Europe Server", eventsTitle: "Tournaments & Events", newsTitle: "News & Info", walletTitle: "Wallet", postsTitle: "Media Feed", voiceTitle: "Voice Rooms", navNews: "News", navWallet: "Wallet", navEvents: "Events", navPosts: "Feed", navVoice: "Voice", timeRemaining: "Starts In", prizeLabel: "Prize", joinBtn: "Join", commentBtn: "Comments", playersOnline: "Online", joinRoomBtn: "Join" }
 };
 
 function changeLanguage(lang) {
@@ -432,6 +541,7 @@ function changeServer(srv) {
 function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+checkExistingSession();
 renderEvents();
 renderNews();
 renderMediaFeed();
