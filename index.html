@@ -3,650 +3,231 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>KX Arena | Vice Edition</title>
+  <title>KX Arena | Pro Esports Platform</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Vazirmatn', sans-serif;
-      background: radial-gradient(circle at top right, #1e0b36, #090514 60%);
-      color: #F8FAFC;
-      -webkit-tap-highlight-color: transparent;
-      overflow-x: hidden;
-    }
-    .vice-gradient {
-      background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
-    }
-    .vice-text {
-      background: linear-gradient(to right, #F472B6, #C084FC);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .glass-card {
-      background: rgba(22, 13, 41, 0.78);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(236, 72, 153, 0.25);
-    }
-    .neon-shadow {
-      box-shadow: 0 0 25px rgba(236, 72, 153, 0.25);
-    }
-    @keyframes pulseRing {
-      0% { transform: scale(0.95); opacity: 0.7; }
-      70% { transform: scale(1.15); opacity: 0; }
-      100% { transform: scale(0.95); opacity: 0; }
-    }
-    .voice-pulse::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 9999px;
-      border: 2px solid #EC4899;
-      animation: pulseRing 1.8s infinite;
-    }
+    body { font-family: 'Vazirmatn', sans-serif; background: radial-gradient(circle at top right, #230c3d, #080412 65%); color: #F8FAFC; overflow-x: hidden; }
+    .vice-gradient { background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%); }
+    .vice-text { background: linear-gradient(to right, #F472B6, #C084FC); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .glass-card { background: rgba(20, 11, 38, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(236, 72, 153, 0.22); }
+    .neon-glow { box-shadow: 0 0 25px rgba(236, 72, 153, 0.2); }
+    @keyframes speakWave { 0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(236, 72, 153, 0); } }
+    .speaking-ring { animation: speakWave 1.4s infinite; border-color: #EC4899 !important; }
   </style>
 </head>
 <body class="min-h-screen pb-24">
 
-  <!-- ==================== پەڕەی چوونەژوورەوە و سکیوریتی (Auth & OTP) ==================== -->
-  <div id="authScreen" class="fixed inset-0 z-50 bg-[#090514] flex items-center justify-center p-4 overflow-y-auto">
-    <div class="glass-card w-full max-w-md rounded-3xl p-6 space-y-5 neon-shadow">
-      
-      <!-- لۆگۆی KX Arena -->
+  <!-- چوونەژوورەوە و ڤێریفای توند -->
+  <div id="authScreen" class="fixed inset-0 z-50 bg-[#080412] flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md rounded-3xl p-6 space-y-5 neon-glow">
       <div class="text-center space-y-1">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl vice-gradient p-0.5 mb-2">
-          <div class="w-full h-full bg-[#090514] rounded-2xl flex items-center justify-center font-black text-2xl vice-text">KX</div>
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl vice-gradient p-0.5">
+          <div class="w-full h-full bg-[#080412] rounded-2xl flex items-center justify-center font-black text-xl vice-text">KX</div>
         </div>
-        <h1 class="text-2xl font-black tracking-wider">KX <span class="vice-text">ARENA</span></h1>
-        <p class="text-xs text-purple-300">KURD APEX ARENA • VICE EDITION</p>
+        <h1 class="text-2xl font-black">KX <span class="vice-text">ARENA</span></h1>
       </div>
 
-      <!-- هەنگاوی ١: ئیمەیڵ و پاسۆرد -->
       <div id="authStep1" class="space-y-3">
-        <h2 class="text-sm font-bold text-pink-400">١. زانیاری هەژمار</h2>
-        <input type="email" id="regEmail" placeholder="ئیمەیڵەکەت بنووسە (example@gmail.com)" class="w-full bg-black/50 border border-purple-800/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500">
-        <input type="password" id="regPass" placeholder="پاسۆردێکی بەهێز دابنێ" class="w-full bg-black/50 border border-purple-800/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500">
-        <button onclick="goToStep2()" class="w-full vice-gradient font-black py-3 rounded-xl text-sm shadow-lg">بەردەوام بوون</button>
+        <input type="email" id="regEmail" placeholder="Email (example@gmail.com)" class="w-full bg-black/60 border border-purple-800/60 rounded-xl px-4 py-3 text-xs">
+        <input type="password" id="regPass" placeholder="Password (Min 6 chars)" class="w-full bg-black/60 border border-purple-800/60 rounded-xl px-4 py-3 text-xs">
+        <button onclick="goToStep2()" class="w-full vice-gradient font-black py-3 rounded-xl text-xs">Continue</button>
       </div>
 
-      <!-- هەنگاوی ٢: ناو و ژمارەی مۆبایل بۆ سکیوریتی -->
       <div id="authStep2" class="hidden space-y-3">
-        <h2 class="text-sm font-bold text-pink-400">٢. زانیاری یاریزان و سکیوریتی</h2>
-        <input type="text" id="regUsername" placeholder="ناوی یوزەرەکەت (Nickname)" class="w-full bg-black/50 border border-purple-800/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500">
+        <input type="text" id="regUsername" placeholder="Gamer Tag / Username" class="w-full bg-black/60 border border-purple-800/60 rounded-xl px-4 py-3 text-xs">
         <div class="flex gap-2" dir="ltr">
-          <span class="bg-purple-950 border border-purple-800/60 rounded-xl px-3 py-3 text-sm font-bold text-pink-400">+964</span>
-          <input type="tel" id="regPhone" placeholder="770 000 0000" class="flex-1 bg-black/50 border border-purple-800/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500">
+          <span class="bg-purple-950/80 border border-purple-800/60 rounded-xl px-3 py-3 text-xs font-bold text-pink-400">+964</span>
+          <input type="tel" id="regPhone" placeholder="770 123 4567" class="flex-1 bg-black/60 border border-purple-800/60 rounded-xl px-4 py-3 text-xs">
         </div>
-        <button onclick="sendOTPCode()" class="w-full vice-gradient font-black py-3 rounded-xl text-sm shadow-lg">ناردنی کۆدی دڵنیایی (Verify)</button>
+        <button onclick="sendOTPCode()" class="w-full vice-gradient font-black py-3 rounded-xl text-xs">Send Verification Code</button>
       </div>
 
-      <!-- هەنگاوی ٣: نووسینی کۆدی ڤێریفای -->
       <div id="authStep3" class="hidden space-y-3 text-center">
-        <h2 class="text-sm font-bold text-emerald-400">٣. کۆدی دڵنیایی نێردرا!</h2>
-        <p class="text-xs text-gray-300">کۆدێکی ٤ ژمارەیی نێردرا بۆ ژمارەکەت (بۆ تاقیکردنەوە کۆدی <span class="text-pink-400 font-bold">2026</span> بنووسە):</p>
-        <input type="text" id="otpInput" maxlength="4" placeholder="----" class="w-40 mx-auto text-center tracking-[0.5em] font-mono text-xl bg-black/60 border border-pink-500 rounded-xl py-2.5 focus:outline-none">
-        <button onclick="completeAuth()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black py-3 rounded-xl text-sm">پشتڕاستکردنەوە و چوونەژوورەوە</button>
+        <p class="text-xs text-gray-300">OTP Code: <strong id="generatedOtpDisplay" class="font-mono text-pink-400 text-sm tracking-widest"></strong></p>
+        <input type="text" id="otpInput" maxlength="6" placeholder="000000" class="block w-48 mx-auto text-center tracking-[0.4em] font-mono text-lg bg-black/70 border border-pink-500 rounded-xl py-2.5">
+        <p id="otpError" class="hidden text-xs text-red-400 font-bold">کۆدەکە هەڵەیە!</p>
+        <button onclick="completeAuth()" class="w-full bg-emerald-500 text-gray-950 font-black py-3 rounded-xl text-xs">Verify & Enter</button>
       </div>
-
     </div>
   </div>
 
-  <!-- ==================== سەرپەڕە (Header: پرۆفایل، جزدان، زمان، سێرڤەر) ==================== -->
-  <header class="sticky top-0 z-40 bg-[#090514]/90 backdrop-blur-md border-b border-purple-900/50 px-3 py-2.5">
+  <!-- سەرپەڕە -->
+  <header class="sticky top-0 z-40 bg-[#080412]/90 backdrop-blur-lg border-b border-purple-900/50 px-3 py-2.5">
     <div class="max-w-3xl mx-auto space-y-2">
-      
-      <!-- ڕیزی یەکەم: پرۆفایل + لۆگۆ + جزدان -->
-      <div class="flex items-center justify-between gap-2">
-        
-        <!-- سووچی پرۆفایل (وێنە و ناو) -->
-        <button onclick="openModal('profileModal')" class="flex items-center gap-2 bg-purple-950/60 border border-pink-500/30 pl-3 pr-1.5 py-1 rounded-full hover:border-pink-500 transition">
-          <img id="headerAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=KX" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-pink-400 bg-black">
-          <span id="headerUsername" class="text-xs font-bold text-white max-w-[85px] truncate">یاریزان</span>
+      <div class="flex items-center justify-between">
+        <button onclick="openModal('profileModal')" class="flex items-center gap-2 bg-purple-950/60 border border-pink-500/30 pl-3 pr-1 py-1 rounded-full">
+          <img id="headerAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-8 h-8 rounded-full object-cover border border-pink-400">
+          <span id="headerUsername" class="text-xs font-bold text-white max-w-[90px] truncate">Player</span>
         </button>
-
-        <!-- لۆگۆی ناوەڕاست -->
-        <div class="text-center">
-          <span class="text-base font-black tracking-wider">KX <span class="vice-text">ARENA</span></span>
-        </div>
-
-        <!-- جزدان -->
-        <button onclick="switchTab('wallet')" class="flex items-center gap-1.5 bg-purple-950/60 border border-emerald-500/40 px-2.5 py-1.5 rounded-xl">
+        <span class="text-base font-black">KX <span class="vice-text">ARENA</span></span>
+        <button onclick="switchTab('wallet')" class="flex items-center gap-2 bg-purple-950/60 border border-emerald-500/40 px-2.5 py-1.5 rounded-xl">
           <div class="text-right">
             <span class="block text-[9px] text-gray-400" data-i18n="balance">باڵانس</span>
             <span id="walletBalance" class="text-xs font-black text-emerald-400">10,000 IQD</span>
           </div>
-          <span class="w-5 h-5 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">+</span>
+          <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
         </button>
       </div>
 
-      <!-- ڕیزی دووەم: هەڵبژاردنی زمان و سێرڤەر -->
-      <div class="flex items-center justify-between gap-2 text-[11px]">
-        <!-- زمانەکان -->
-        <div class="flex items-center gap-1 bg-black/40 border border-purple-800/50 rounded-lg px-2 py-1">
-          <span>🌐</span>
-          <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-transparent text-pink-300 font-bold focus:outline-none">
-            <option value="ku" class="bg-[#160d29]">کوردی</option>
-            <option value="ar" class="bg-[#160d29]">العربية</option>
-            <option value="en" class="bg-[#160d29]">English</option>
+      <div class="flex items-center justify-between text-[11px]">
+        <div class="flex items-center gap-1.5 bg-black/50 border border-purple-800/50 rounded-lg px-2.5 py-1">
+          <i data-lucide="globe" class="w-3.5 h-3.5 text-pink-400"></i>
+          <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-transparent text-pink-200 font-bold focus:outline-none">
+            <option value="ku" class="bg-[#140b26]">کوردی</option>
+            <option value="ar" class="bg-[#140b26]">العربية</option>
+            <option value="en" class="bg-[#140b26]">English</option>
           </select>
         </div>
-
-        <!-- سێرڤەرەکان -->
-        <div class="flex items-center gap-1 bg-black/40 border border-purple-800/50 rounded-lg px-2 py-1">
-          <span>📡</span>
-          <select id="serverSelect" onchange="changeServer(this.value)" class="bg-transparent text-purple-300 font-bold focus:outline-none">
-            <option value="kurd" class="bg-[#160d29]">سێرڤەری کوردی ☀️</option>
-            <option value="iraq" class="bg-[#160d29]">سێرڤەری عێراقی 🇮🇶</option>
-            <option value="eu" class="bg-[#160d29]">سێرڤەری ئەوروپی 🇪🇺</option>
+        <div class="flex items-center gap-1.5 bg-black/50 border border-purple-800/50 rounded-lg px-2.5 py-1">
+          <i data-lucide="server" class="w-3.5 h-3.5 text-purple-400"></i>
+          <select id="serverSelect" onchange="changeServer(this.value)" class="bg-transparent text-purple-200 font-bold focus:outline-none">
+            <option value="kurd" class="bg-[#140b26]" data-i18n="srvKurd">سێرڤەری کوردی</option>
+            <option value="iraq" class="bg-[#140b26]" data-i18n="srvIraq">سێرڤەری عێراقی</option>
+            <option value="eu" class="bg-[#140b26]" data-i18n="srvEu">سێرڤەری ئەوروپی</option>
           </select>
         </div>
       </div>
-
     </div>
   </header>
 
-  <!-- ==================== پەخشکەری گۆرانی بچووک (GTA Radio Mini-Player) ==================== -->
-  <div id="musicWidget" class="fixed bottom-20 left-3 z-40 glass-card rounded-full p-1.5 pr-3 flex items-center gap-2 border-pink-500/50 neon-shadow transition-all">
-    <div class="text-right max-w-[110px]">
-      <span class="block text-[9px] text-pink-400 font-bold">GTA VI RADIO</span>
-      <span id="trackName" class="block text-[10px] text-white truncate">1. Vice Night</span>
+  <!-- ڕادیۆی GTA VI -->
+  <div id="musicWidget" class="fixed bottom-20 left-3 z-40 glass-card rounded-full p-1.5 pr-3 flex items-center gap-2 border-pink-500/50 neon-glow">
+    <div class="max-w-[125px]">
+      <span class="block text-[8px] text-pink-400 font-black">GTA VI RADIO</span>
+      <span id="trackName" class="block text-[10px] text-white font-bold truncate">Blood In Your Eyes</span>
     </div>
-    <button onclick="togglePlayMusic()" id="playMusicBtn" class="w-8 h-8 rounded-full vice-gradient flex items-center justify-center text-xs font-bold shadow">▶️</button>
-    <button onclick="nextTrack()" class="w-7 h-7 rounded-full bg-purple-900/80 hover:bg-pink-600 flex items-center justify-center text-xs">⏭️</button>
+    <button onclick="togglePlayMusic()" id="playMusicBtn" class="w-8 h-8 rounded-full vice-gradient flex items-center justify-center">
+      <i data-lucide="play" class="w-3.5 h-3.5 text-white fill-white"></i>
+    </button>
+    <button onclick="nextTrack()" class="w-7 h-7 rounded-full bg-purple-900/80 flex items-center justify-center">
+      <i data-lucide="skip-forward" class="w-3.5 h-3.5 text-white"></i>
+    </button>
   </div>
 
-  <!-- ==================== ناوەڕۆکی بەشەکان (Tabs Content) ==================== -->
+  <!-- بەشەکان -->
   <main class="max-w-3xl mx-auto px-4 pt-4">
-
-    <!-- ١. بەشی ئیڤێنتەکان (Events - پەڕەی سەرەکی) -->
     <section id="tab-events" class="tab-section space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-base font-black vice-text" data-i18n="eventsTitle">🔥 ئیڤێنت و پاڵەوانێتییەکان</h2>
-        <span id="activeServerBadge" class="text-[10px] bg-pink-500/20 text-pink-300 px-2.5 py-1 rounded-full border border-pink-500/30">سێرڤەری کوردی</span>
+        <h2 class="text-sm font-black vice-text" data-i18n="eventsTitle">ئیڤێنت و پاڵەوانێتییەکان</h2>
+        <span id="activeServerBadge" class="text-[10px] bg-pink-500/20 text-pink-300 px-2.5 py-1 rounded-full" data-i18n="srvKurd">سێرڤەری کوردی</span>
       </div>
       <div id="eventsContainer" class="space-y-4"></div>
     </section>
 
-    <!-- ٢. بەشی هەواڵ و زانیاری (News) -->
     <section id="tab-news" class="tab-section hidden space-y-4">
-      <h2 class="text-base font-black vice-text" data-i18n="newsTitle">📰 هەواڵ و زانیاری KX Arena</h2>
-      <div class="glass-card rounded-2xl overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80" class="w-full h-40 object-cover" alt="News">
-        <div class="p-4 space-y-2">
-          <span class="text-[10px] bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded font-bold">ڕاگەیاندنی فەرمی</span>
-          <h3 class="text-sm font-bold text-white">وەشانی نوێی KX Arena Vice Edition بەردەستە!</h3>
-          <p class="text-xs text-gray-300 leading-relaxed">ئێستا دەتوانن لە ڕێگەی سێرڤەری کوردی، عێراقی و ئەوروپییەوە بەشداری خولەکانی PUBG و eFootball بکەن و خەڵاتەکان بە FIB وەربگرن.</p>
-        </div>
-      </div>
-      <div class="glass-card rounded-2xl p-4 space-y-2">
-        <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-bold">یاسای دژە-فێڵ</span>
-        <h3 class="text-sm font-bold text-white">چۆنیەتی ناردنی ئەنجام بە زیرەکی دەستکرد (AI)</h3>
-        <p class="text-xs text-gray-300 leading-relaxed">پێویستە وێنەی ئەنجامەکە ڕوون بێت و کۆدی ژوورەکەی تێدا دەربکەوێت تا لە ماوەی ١٠ چرکەدا باڵانسەکەت بۆ زیاد بکرێت.</p>
-      </div>
+      <h2 class="text-sm font-black vice-text" data-i18n="newsTitle">هەواڵ و زانیاری</h2>
+      <div id="newsContainer" class="space-y-4"></div>
     </section>
 
-    <!-- ٣. بەشی جزدان (Wallet: پڕکردنەوە و حەواڵە) -->
     <section id="tab-wallet" class="tab-section hidden space-y-4">
-      <h2 class="text-base font-black vice-text" data-i18n="walletTitle">💳 جزدانی دارایی و حەواڵە</h2>
-      
-      <div class="glass-card rounded-2xl p-5 text-center space-y-2 neon-shadow">
-        <span class="text-xs text-purple-300">باڵانسی بەردەست</span>
+      <h2 class="text-sm font-black vice-text" data-i18n="walletTitle">جزدانی دارایی</h2>
+      <div class="glass-card rounded-2xl p-5 text-center neon-glow">
         <p id="walletMainDisplay" class="text-3xl font-black text-emerald-400">10,000 IQD</p>
       </div>
-
-      <!-- پڕکردنەوە بە FIB -->
       <div class="glass-card rounded-2xl p-4 space-y-3">
-        <h3 class="text-sm font-bold text-pink-400">➕ پڕکردنەوەی جزدان (FIB)</h3>
-        <p class="text-xs text-gray-300">بڕی پارەکە بنێرە بۆ ژمارە <span class="font-mono text-amber-400 font-bold" dir="ltr">0770 000 0000</span> و وەسڵەکە لێرە دابنێ:</p>
-        <input type="number" id="depositInput" placeholder="بڕی پارە (نموونە: 5000)" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
-        <button onclick="handleDeposit()" class="w-full bg-emerald-500 text-gray-950 font-black py-2.5 rounded-xl text-xs">پڕکردنەوەی باڵانس</button>
+        <p class="text-[11px] text-gray-300">FIB: <span id="fibNumberDisplay" class="font-mono text-amber-400 font-bold" dir="ltr"></span></p>
+        <input type="number" id="depositInput" placeholder="Amount (IQD)" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
+        <input type="text" id="txRefInput" placeholder="Transaction ID" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
+        <label class="flex flex-col items-center justify-center border-2 border-dashed border-purple-700 rounded-xl p-3 cursor-pointer bg-black/30">
+          <span id="receiptFileName" class="text-[11px] text-gray-300" data-i18n="uploadReceipt">وێنەی پسوولەی FIB هەڵبژێرە (پێویستە)</span>
+          <input type="file" accept="image/*" class="hidden" onchange="previewReceipt(event)">
+        </label>
+        <button onclick="handleDeposit()" class="w-full bg-emerald-500 text-gray-950 font-black py-2.5 rounded-xl text-xs" data-i18n="submitDeposit">ناردنی پسوولە بۆ پشکنین</button>
+        <div id="receiptsHistory" class="space-y-2"></div>
       </div>
-
-      <!-- حەواڵەکردن بۆ هاوڕێ یان ڕاکێشان -->
       <div class="glass-card rounded-2xl p-4 space-y-3">
-        <h3 class="text-sm font-bold text-purple-300">💸 حەواڵەکردنی باڵانس بۆ یاریزانێکی تر</h3>
-        <input type="text" id="transferUser" placeholder="ناوی یوزەر یان ژمارە مۆبایلی وەرگر" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
-        <input type="number" id="transferAmount" placeholder="بڕی حەواڵە (IQD)" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
-        <button onclick="handleTransfer()" class="w-full vice-gradient text-white font-black py-2.5 rounded-xl text-xs">ناردنی حەواڵە</button>
+        <input type="text" id="transferUser" placeholder="Recipient Username" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
+        <input type="number" id="transferAmount" placeholder="Amount (IQD)" class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
+        <button onclick="handleTransfer()" class="w-full vice-gradient text-white font-black py-2.5 rounded-xl text-xs" data-i18n="sendTransfer">ناردنی حەواڵە</button>
       </div>
     </section>
 
-    <!-- ٤. بەشی پۆستەکان (Community Posts) -->
     <section id="tab-posts" class="tab-section hidden space-y-4">
-      <h2 class="text-base font-black vice-text" data-i18n="postsTitle">💬 پۆست و کۆمەڵگای یاریزانان</h2>
-      
-      <!-- نووسینی پۆستی نوێ -->
-      <div class="glass-card rounded-2xl p-3.5 space-y-2.5">
-        <textarea id="newPostText" rows="2" placeholder="شتێک بنووسە... (بۆ نموونە: کێ دێت بۆ ڕوومی TDM؟)" class="w-full bg-black/40 border border-purple-800/60 rounded-xl p-2.5 text-xs focus:outline-none focus:border-pink-500"></textarea>
-        <button onclick="createPost()" class="vice-gradient px-4 py-2 rounded-xl text-xs font-bold">بڵاوکردنەوەی پۆست</button>
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-black vice-text" data-i18n="postsTitle">کلیپ و وێنە</h2>
+        <button onclick="openModal('newPostModal')" class="vice-gradient px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="addMediaBtn">بڵاوکردنەوە</span>
+        </button>
       </div>
-
-      <div id="postsFeed" class="space-y-3"></div>
+      <div id="postsFeed" class="space-y-4"></div>
     </section>
 
-    <!-- ٥. بەشی ژوورە دەنگییەکان (Voice Rooms) -->
     <section id="tab-voice" class="tab-section hidden space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-base font-black vice-text" data-i18n="voiceTitle">🎙️ ژوورە دەنگییەکان (Voice Rooms)</h2>
-        <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">● ڕاستەوخۆ</span>
+        <h2 class="text-sm font-black vice-text" data-i18n="voiceTitle">ژوورە دەنگییەکان</h2>
+        <button onclick="createNewVoiceRoom()" class="bg-purple-900/80 border border-pink-500/40 px-3 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1">
+          <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-pink-400"></i> <span data-i18n="createRoomBtn">دروستکردنی ژوور</span>
+        </button>
       </div>
-
       <div id="voiceRoomsList" class="space-y-3"></div>
-
-      <!-- پەنجەرەی ناو ژووری دەنگی چالاک -->
-      <div id="activeVoicePanel" class="hidden glass-card rounded-2xl p-4 border-pink-500 space-y-4 neon-shadow">
-        <div class="flex justify-between items-center border-b border-purple-800/50 pb-2.5">
-          <div>
-            <span class="text-[10px] text-pink-400 font-bold">لە ناو ژووری دەنگیدایت</span>
-            <h3 id="activeRoomName" class="text-sm font-black text-white">ژووری گشتی</h3>
-          </div>
-          <button onclick="leaveVoiceRoom()" class="bg-red-500/20 text-red-400 border border-red-500/40 px-3 py-1 rounded-xl text-xs font-bold">چوونە دەرەوە</button>
+      <div id="activeVoicePanel" class="hidden glass-card rounded-3xl p-4 border-pink-500 space-y-4 neon-glow">
+        <div class="flex justify-between items-center border-b border-purple-800/50 pb-3">
+          <h3 id="activeRoomName" class="text-sm font-black text-white">Room</h3>
+          <button onclick="leaveVoiceRoom()" class="bg-red-500/20 text-red-400 px-3 py-1 rounded-xl text-xs font-bold" data-i18n="leaveBtn">دەرچوون</button>
         </div>
-
-        <div class="grid grid-cols-3 gap-3 text-center py-2">
-          <div class="space-y-1">
-            <div class="relative w-14 h-14 mx-auto rounded-full vice-pulse">
-              <img id="voiceMyAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=KX" class="w-14 h-14 rounded-full border-2 border-pink-500 bg-black">
-            </div>
-            <span id="voiceMyName" class="block text-xs font-bold text-white">تۆ</span>
-          </div>
-          <div class="space-y-1">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Saman" class="w-14 h-14 mx-auto rounded-full border border-purple-500 bg-black">
-            <span class="block text-xs text-gray-300">سامان</span>
-          </div>
-          <div class="space-y-1">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aria" class="w-14 h-14 mx-auto rounded-full border border-purple-500 bg-black">
-            <span class="block text-xs text-gray-300">ئاریا</span>
-          </div>
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div><img id="voiceMyAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 mx-auto rounded-full object-cover border-2 speaking-ring"><span id="voiceMyName" class="text-xs font-bold">You</span></div>
+          <div><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 mx-auto rounded-full object-cover border-2 border-purple-500"><span class="text-xs">Saman_KX</span></div>
+          <div><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 mx-auto rounded-full object-cover border-2 border-purple-500"><span class="text-xs">Aria_Pro</span></div>
         </div>
-
-        <div class="flex justify-center gap-4 pt-1">
-          <button onclick="this.classList.toggle('bg-red-600')" class="bg-purple-900 px-4 py-2 rounded-full text-xs font-bold">🎤 مایک</button>
-          <button class="bg-purple-900 px-4 py-2 rounded-full text-xs font-bold">🔊 دەنگ</button>
+        <div class="flex justify-around bg-black/40 rounded-2xl p-2.5 text-[10px] font-bold">
+          <button onclick="toggleMic(this)" class="text-emerald-400 flex items-center gap-1"><i data-lucide="mic" class="w-4 h-4"></i><span>Mic On</span></button>
+          <button onclick="alert('دەستت بەرزکردەوە!')" class="text-amber-400 flex items-center gap-1"><i data-lucide="hand" class="w-4 h-4"></i><span>Raise Hand</span></button>
+          <button onclick="toggleRoomLock(this)" class="text-purple-300 flex items-center gap-1"><i data-lucide="lock" class="w-4 h-4"></i><span>Lock</span></button>
+        </div>
+        <!-- چاتی ناو ژوور -->
+        <div class="space-y-2 pt-2 border-t border-purple-800/40">
+          <div id="voiceChatMessages" class="h-20 overflow-y-auto bg-black/30 rounded-xl p-2 space-y-1"></div>
+          <div class="flex gap-2">
+            <input type="text" id="voiceChatInput" placeholder="Message..." class="flex-1 bg-black/50 border border-purple-800 rounded-xl px-3 py-1.5 text-xs">
+            <button onclick="sendVoiceChat()" class="vice-gradient px-3 py-1.5 rounded-xl text-xs font-bold">Send</button>
+          </div>
         </div>
       </div>
     </section>
-
   </main>
 
-  <!-- ==================== پەنجەرەی دەستکاریکردنی پرۆفایل ==================== -->
-  <div id="profileModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <!-- مۆداڵی پرۆفایل -->
+  <div id="profileModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
     <div class="glass-card w-full max-w-sm rounded-3xl p-5 space-y-4 text-center">
-      <div class="flex justify-between items-center">
-        <h3 class="text-sm font-black vice-text">پرۆفایلی یاریزان</h3>
-        <button onclick="closeModal('profileModal')" class="text-gray-400 text-xl">&times;</button>
-      </div>
-
+      <div class="flex justify-between"><h3 class="text-sm font-black vice-text" data-i18n="profileSettings">ڕێکخستنی پرۆفایل</h3><button onclick="closeModal('profileModal')">✕</button></div>
       <div class="relative w-24 h-24 mx-auto">
-        <img id="modalAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=KX" class="w-24 h-24 rounded-full object-cover border-2 border-pink-500 bg-black">
-        <label class="absolute bottom-0 right-0 w-8 h-8 rounded-full vice-gradient flex items-center justify-center cursor-pointer shadow-lg">
-          <span class="text-xs">📷</span>
-          <input type="file" accept="image/*" class="hidden" onchange="uploadProfilePic(event)">
-        </label>
+        <img id="modalAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-24 h-24 rounded-full object-cover border-2 border-pink-500">
+        <label class="absolute bottom-0 right-0 w-8 h-8 rounded-full vice-gradient flex items-center justify-center cursor-pointer"><i data-lucide="camera" class="w-4 h-4"></i><input type="file" accept="image/*" class="hidden" onchange="uploadProfilePic(event)"></label>
       </div>
-
-      <div class="space-y-2 text-right">
-        <label class="text-[11px] text-purple-300">ناوی یوزەر (Username):</label>
-        <input type="text" id="editUsernameInput" class="w-full bg-black/50 border border-purple-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
-      </div>
-
-      <button onclick="saveProfile()" class="w-full vice-gradient font-black py-2.5 rounded-xl text-xs">پاشەکەوتکردنی گۆڕانکاری</button>
+      <input type="text" id="editUsernameInput" class="w-full bg-black/50 border border-purple-700 rounded-xl px-3.5 py-2.5 text-xs">
+      <button onclick="saveProfile()" class="w-full vice-gradient font-black py-2.5 rounded-xl text-xs" data-i18n="saveBtn">پاشەکەوتکردن</button>
     </div>
   </div>
 
-  <!-- ==================== شریتی خوارەوە (٥ بەشەکە) ==================== -->
-  <nav class="fixed bottom-0 inset-x-0 bg-[#0d071c]/95 backdrop-blur-md border-t border-purple-900/60 py-2 px-2 z-40">
+  <!-- مۆداڵی بڵاوکردنەوەی وێنە و ڤیدیۆ -->
+  <div id="newPostModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-3xl p-5 space-y-4">
+      <div class="flex justify-between"><h3 class="text-sm font-black vice-text" data-i18n="postModalTitle">بڵاوکردنەوەی وێنە یان ڤیدیۆ</h3><button onclick="closeModal('newPostModal')">✕</button></div>
+      <label class="flex flex-col items-center border-2 border-dashed border-pink-500/50 rounded-2xl p-6 cursor-pointer bg-black/40">
+        <i data-lucide="film" class="w-7 h-7 text-pink-400 mb-1"></i>
+        <span id="mediaUploadLabel" class="text-xs font-bold" data-i18n="selectMedia">وێنە یان ڤیدیۆ هەڵبژێرە</span>
+        <input type="file" accept="image/*,video/*" class="hidden" onchange="handleMediaSelect(event)">
+      </label>
+      <input type="text" id="postCaptionInput" placeholder="Caption..." class="w-full bg-black/50 border border-purple-800 rounded-xl px-3.5 py-2.5 text-xs">
+      <button onclick="publishMediaPost()" class="w-full vice-gradient font-black py-2.5 rounded-xl text-xs" data-i18n="publishBtn">بڵاوکردنەوە</button>
+    </div>
+  </div>
+
+  <!-- شریتی خوارەوە -->
+  <nav class="fixed bottom-0 inset-x-0 bg-[#080412]/95 border-t border-purple-900/60 py-2 z-40">
     <div class="max-w-3xl mx-auto grid grid-cols-5 text-[10px] font-bold text-center">
-      <button onclick="switchTab('news')" id="nav-news" class="nav-btn text-gray-400 flex flex-col items-center gap-1">
-        <span class="text-base">📰</span>
-        <span data-i18n="navNews">هەواڵ</span>
-      </button>
-      <button onclick="switchTab('wallet')" id="nav-wallet" class="nav-btn text-gray-400 flex flex-col items-center gap-1">
-        <span class="text-base">💳</span>
-        <span data-i18n="navWallet">جزدان</span>
-      </button>
-      <button onclick="switchTab('events')" id="nav-events" class="nav-btn text-pink-400 flex flex-col items-center gap-1">
-        <span class="text-base">🏆</span>
-        <span data-i18n="navEvents">ئیڤێنتەکان</span>
-      </button>
-      <button onclick="switchTab('posts')" id="nav-posts" class="nav-btn text-gray-400 flex flex-col items-center gap-1">
-        <span class="text-base">💬</span>
-        <span data-i18n="navPosts">پۆست</span>
-      </button>
-      <button onclick="switchTab('voice')" id="nav-voice" class="nav-btn text-gray-400 flex flex-col items-center gap-1">
-        <span class="text-base">🎙️</span>
-        <span data-i18n="navVoice">ژووری دەنگی</span>
-      </button>
+      <button onclick="switchTab('news')" id="nav-news" class="nav-btn text-gray-400 flex flex-col items-center gap-1"><i data-lucide="newspaper" class="w-4 h-4"></i><span data-i18n="navNews">هەواڵ</span></button>
+      <button onclick="switchTab('wallet')" id="nav-wallet" class="nav-btn text-gray-400 flex flex-col items-center gap-1"><i data-lucide="wallet" class="w-4 h-4"></i><span data-i18n="navWallet">جزدان</span></button>
+      <button onclick="switchTab('events')" id="nav-events" class="nav-btn text-pink-400 flex flex-col items-center gap-1"><i data-lucide="trophy" class="w-4 h-4"></i><span data-i18n="navEvents">ئیڤێنتەکان</span></button>
+      <button onclick="switchTab('posts')" id="nav-posts" class="nav-btn text-gray-400 flex flex-col items-center gap-1"><i data-lucide="clapperboard" class="w-4 h-4"></i><span data-i18n="navPosts">پۆست</span></button>
+      <button onclick="switchTab('voice')" id="nav-voice" class="nav-btn text-gray-400 flex flex-col items-center gap-1"><i data-lucide="mic" class="w-4 h-4"></i><span data-i18n="navVoice">ژووری دەنگی</span></button>
     </div>
   </nav>
 
-  <script>
-    // --- ١. سیستەمی چوونەژوورەوە و سکیوریتی ---
-    function goToStep2() {
-      const email = document.getElementById('regEmail').value.trim();
-      const pass = document.getElementById('regPass').value.trim();
-      if (!email || !pass) return alert('تکایە ئیمەیڵ و پاسۆرد بنووسە.');
-      document.getElementById('authStep1').classList.add('hidden');
-      document.getElementById('authStep2').classList.remove('hidden');
-    }
-
-    function sendOTPCode() {
-      const uname = document.getElementById('regUsername').value.trim();
-      const phone = document.getElementById('regPhone').value.trim();
-      if (!uname || !phone) return alert('تکایە ناوی یوزەر و ژمارە مۆبایل بنووسە.');
-      document.getElementById('authStep2').classList.add('hidden');
-      document.getElementById('authStep3').classList.remove('hidden');
-    }
-
-    function completeAuth() {
-      const otp = document.getElementById('otpInput').value.trim();
-      if (otp.length < 4) return alert('تکایە کۆدە ٤ ژمارەییەکە بنووسە.');
-      const uname = document.getElementById('regUsername').value.trim();
-      document.getElementById('headerUsername').innerText = uname;
-      document.getElementById('editUsernameInput').value = uname;
-      document.getElementById('voiceMyName').innerText = uname;
-      document.getElementById('authScreen').classList.add('hidden');
-    }
-
-    // --- ٢. پرۆفایل (وێنە و ناو) ---
-    function uploadProfilePic(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-          document.getElementById('headerAvatar').src = e.target.result;
-          document.getElementById('modalAvatar').src = e.target.result;
-          document.getElementById('voiceMyAvatar').src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function saveProfile() {
-      const newName = document.getElementById('editUsernameInput').value.trim();
-      if (newName) {
-        document.getElementById('headerUsername').innerText = newName;
-        document.getElementById('voiceMyName').innerText = newName;
-      }
-      closeModal('profileModal');
-    }
-
-    // --- ٣. پەخشکەری گۆرانی GTA VI (بە دەنگی سینتیسایزەری خۆکار + لابردن لە کاتی ڤۆیس کۆڵ) ---
-    const tracks = [
-      { name: "1. Vice City Sunset", freq: 220 },
-      { name: "2. Leonida Midnight", freq: 261.6 },
-      { name: "3. Neon Highway", freq: 329.6 }
-    ];
-    let currentTrack = 0;
-    let isPlayingMusic = false;
-    let audioCtx = null;
-    let musicInterval = null;
-
-    function playSynthBeat(baseFreq) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.4);
-    }
-
-    function togglePlayMusic() {
-      const btn = document.getElementById('playMusicBtn');
-      if (isPlayingMusic) {
-        clearInterval(musicInterval);
-        isPlayingMusic = false;
-        btn.innerText = '▶️';
-      } else {
-        isPlayingMusic = true;
-        btn.innerText = '⏸️';
-        let step = 0;
-        musicInterval = setInterval(() => {
-          const notes = [1, 1.25, 1.5, 1.25];
-          playSynthBeat(tracks[currentTrack].freq * notes[step % 4]);
-          step++;
-        }, 450);
-      }
-    }
-
-    function nextTrack() {
-      currentTrack = (currentTrack + 1) % tracks.length;
-      document.getElementById('trackName').innerText = tracks[currentTrack].name;
-      if (isPlayingMusic) {
-        togglePlayMusic();
-        togglePlayMusic();
-      }
-    }
-
-    function stopMusicCompletely() {
-      if (isPlayingMusic) {
-        clearInterval(musicInterval);
-        isPlayingMusic = false;
-        document.getElementById('playMusicBtn').innerText = '▶️';
-      }
-    }
-
-    // --- ٤. گۆڕینی بەشەکان (Tabs) + کۆنترۆڵی ئایکۆنی گۆرانی لە ڤۆیس کۆڵ ---
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
-      document.getElementById('tab-' + tabName).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('text-pink-400');
-        btn.classList.add('text-gray-400');
-      });
-      document.getElementById('nav-' + tabName).classList.remove('text-gray-400');
-      document.getElementById('nav-' + tabName).classList.add('text-pink-400');
-
-      // کاتێک دەچیتە بەشی ژوورە دەنگییەکان، ئۆتۆماتیکی گۆرانی دەوەستێت و ئایکۆنەکەی لادەچێت
-      const musicWidget = document.getElementById('musicWidget');
-      if (tabName === 'voice') {
-        stopMusicCompletely();
-        musicWidget.classList.add('hidden');
-      } else {
-        musicWidget.classList.remove('hidden');
-      }
-    }
-
-    // --- ٥. ئیڤێنتەکان بە وێنەی یاری و کاتژمێری ژماردنی پێچەوانە (Countdown) ---
-    const eventsData = [
-      {
-        id: 1,
-        title: "تۆڕنامێنتی گەورەی PUBG Mobile Squad",
-        game: "PUBG MOBILE",
-        image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=800&q=80",
-        startDateText: "بەرواری دەستپێکردن: 2026/12/01 - کاتژمێر ٩:٠٠ی شەو",
-        targetTime: Date.now() + (3 * 24 * 60 * 60 * 1000) + (5 * 3600 * 1000), // ٣ ڕۆژ و ٥ کاتژمێر ماوە
-        prize: "150,000 IQD",
-        entry: 3000
-      },
-      {
-        id: 2,
-        title: "جامی نایابی eFootball 2026 (1v1)",
-        game: "EFOOTBALL",
-        image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80",
-        startDateText: "بەرواری دەستپێکردن: 2026/11/28 - کاتژمێر ٨:٣٠ی شەو",
-        targetTime: Date.now() + (1 * 24 * 60 * 60 * 1000) + (14 * 3600 * 1000), // ١ ڕۆژ و ١٤ کاتژمێر ماوە
-        prize: "50,000 IQD",
-        entry: 2000
-      }
-    ];
-
-    function renderEvents() {
-      const container = document.getElementById('eventsContainer');
-      container.innerHTML = '';
-      eventsData.forEach(ev => {
-        container.innerHTML += `
-          <div class="glass-card rounded-2xl overflow-hidden neon-shadow">
-            <div class="relative h-44">
-              <img src="${ev.image}" alt="${ev.game}" class="w-full h-full object-cover">
-              <div class="absolute inset-0 bg-gradient-to-t from-[#160d29] via-black/40 to-transparent"></div>
-              <span class="absolute top-3 right-3 vice-gradient text-[10px] font-black px-2.5 py-1 rounded-lg">${ev.game}</span>
-              <div class="absolute bottom-3 right-3 left-3">
-                <h3 class="text-base font-black text-white">${ev.title}</h3>
-                <p class="text-[11px] text-pink-300 font-bold mt-0.5">📅 ${ev.startDateText}</p>
-              </div>
-            </div>
-
-            <div class="p-4 space-y-3">
-              <!-- کاتژمێری ژماردنی پێچەوانە -->
-              <div class="bg-black/50 border border-purple-800/60 rounded-xl p-2.5 text-center">
-                <span class="block text-[10px] text-gray-400">⏳ کاتی ماوە بۆ دەستپێکردن:</span>
-                <span id="timer-${ev.id}" class="font-mono text-sm font-black text-pink-400" dir="ltr">حیساب دەکرێت...</span>
-              </div>
-
-              <div class="flex items-center justify-between pt-1">
-                <div>
-                  <span class="block text-[10px] text-gray-400">خەڵاتی یەکەم</span>
-                  <span class="text-sm font-black text-emerald-400">${ev.prize}</span>
-                </div>
-                <button onclick="joinEvent(${ev.entry})" class="vice-gradient px-5 py-2.5 rounded-xl text-xs font-black shadow-lg">بەشداریکردن (${ev.entry.toLocaleString()} IQD)</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    // نوێکردنەوەی چرکە بە چرکەی کاتژمێرەکان
-    setInterval(() => {
-      eventsData.forEach(ev => {
-        const el = document.getElementById(`timer-${ev.id}`);
-        if (!el) return;
-        const diff = ev.targetTime - Date.now();
-        if (diff <= 0) {
-          el.innerText = "ئێستا دەستی پێکرد!";
-          return;
-        }
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const mins = Math.floor((diff / 1000 / 60) % 60);
-        const secs = Math.floor((diff / 1000) % 60);
-        el.innerText = `${days} ڕۆژ : ${hours} کاتژمێر : ${mins} خولەک : ${secs} چرکە`;
-      });
-    }, 1000);
-
-    // --- ٦. جزدان، پۆستەکان، ژوورە دەنگییەکان، زمان و سێرڤەر ---
-    let balance = 10000;
-    function updateBalance(newBal) {
-      balance = newBal;
-      const formatted = balance.toLocaleString() + " IQD";
-      document.getElementById('walletBalance').innerText = formatted;
-      document.getElementById('walletMainDisplay').innerText = formatted;
-    }
-
-    function joinEvent(cost) {
-      if (balance < cost) return alert('باڵانسی پێویستت نییە! تکایە لە بەشی جزدان باڵانس پڕبکەرەوە.');
-      updateBalance(balance - cost);
-      alert('بە سەرکەوتوویی بەشداریت کرد لە تۆڕنامێنتەکە!');
-    }
-
-    function handleDeposit() {
-      const amt = parseInt(document.getElementById('depositInput').value);
-      if (!amt || amt < 1000) return alert('کەمترین بڕ ١,٠٠٠ دینارە.');
-      updateBalance(balance + amt);
-      document.getElementById('depositInput').value = '';
-      alert('وەسڵی FIB پەسەند کرا و باڵانس زیادکرا!');
-    }
-
-    function handleTransfer() {
-      const user = document.getElementById('transferUser').value.trim();
-      const amt = parseInt(document.getElementById('transferAmount').value);
-      if (!user || !amt || amt > balance) return alert('زانیارییەکان هەڵەن یان باڵانس بەش ناکات.');
-      updateBalance(balance - amt);
-      document.getElementById('transferUser').value = '';
-      document.getElementById('transferAmount').value = '';
-      alert(`بڕی ${amt.toLocaleString()} IQD حەواڵە کرا بۆ ${user}`);
-    }
-
-    // پۆستەکان
-    const posts = [
-      { user: "ئەحمەد پۆبجی", text: "کێ ئامادەیە بۆ ڕوومی TDM 1v1 لەسەر سێرڤەری کوردی؟ 🔥", time: "٥ خولەک لەمەوبەر" },
-      { user: "کوردۆ گەیمەر", text: "دیزاینە نوێیەکەی KX Arena ڕێک وەک GTA VI شازە!", time: "٢٠ خولەک لەمەوبەر" }
-    ];
-    function renderPosts() {
-      const feed = document.getElementById('postsFeed');
-      feed.innerHTML = '';
-      posts.forEach(p => {
-        feed.innerHTML += `
-          <div class="glass-card rounded-2xl p-3.5 space-y-1.5">
-            <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-pink-400">${p.user}</span>
-              <span class="text-[10px] text-gray-400">${p.time}</span>
-            </div>
-            <p class="text-xs text-gray-200">${p.text}</p>
-          </div>
-        `;
-      });
-    }
-    function createPost() {
-      const txt = document.getElementById('newPostText').value.trim();
-      if (!txt) return;
-      const myName = document.getElementById('headerUsername').innerText;
-      posts.unshift({ user: myName, text: txt, time: "ئێستا" });
-      document.getElementById('newPostText').value = '';
-      renderPosts();
-    }
-
-    // ژوورە دەنگییەکان
-    const voiceRooms = [
-      { name: "🎙️ ژووری گشتی یاریزانانی کورد", count: 14 },
-      { name: "🔥 ژووری سکوادەکانی PUBG Erangel", count: 8 },
-      { name: "⚽ گفتوگۆی پاڵەوانانی eFootball", count: 5 }
-    ];
-    function renderVoiceRooms() {
-      const list = document.getElementById('voiceRoomsList');
-      list.innerHTML = '';
-      voiceRooms.forEach(r => {
-        list.innerHTML += `
-          <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <h3 class="text-xs font-bold text-white">${r.name}</h3>
-              <span class="text-[10px] text-emerald-400">● ${r.count} کەس لە ناو ژووردان</span>
-            </div>
-            <button onclick="joinVoiceRoom('${r.name}')" class="vice-gradient px-3.5 py-2 rounded-xl text-xs font-bold">چوونە ژوورەوە</button>
-          </div>
-        `;
-      });
-    }
-    function joinVoiceRoom(name) {
-      document.getElementById('activeRoomName').innerText = name;
-      document.getElementById('activeVoicePanel').classList.remove('hidden');
-    }
-    function leaveVoiceRoom() {
-      document.getElementById('activeVoicePanel').classList.add('hidden');
-    }
-
-    // گۆڕینی سێرڤەر و زمان
-    function changeServer(srv) {
-      const map = { kurd: "سێرڤەری کوردی ☀️", iraq: "سێرڤەری عێراقی 🇮🇶", eu: "سێرڤەری ئەوروپی 🇪🇺" };
-      document.getElementById('activeServerBadge').innerText = map[srv];
-    }
-
-    const i18n = {
-      ku: { balance: "باڵانس", eventsTitle: "🔥 ئیڤێنت و پاڵەوانێتییەکان", newsTitle: "📰 هەواڵ و زانیاری KX Arena", walletTitle: "💳 جزدانی دارایی و حەواڵە", postsTitle: "💬 پۆست و کۆمەڵگای یاریزانان", voiceTitle: "🎙️ ژوورە دەنگییەکان", navNews: "هەواڵ", navWallet: "جزدان", navEvents: "ئیڤێنتەکان", navPosts: "پۆست", navVoice: "ژووری دەنگی" },
-      ar: { balance: "الرصيد", eventsTitle: "🔥 البطولات والأحداث", newsTitle: "📰 أخبار ومعلومات KX Arena", walletTitle: "💳 المحفظة والتحويلات", postsTitle: "💬 منشورات اللاعبين", voiceTitle: "🎙️ الغرف الصوتية", navNews: "الأخبار", navWallet: "المحفظة", navEvents: "البطولات", navPosts: "المنشورات", navVoice: "غرف صوتية" },
-      en: { balance: "Balance", eventsTitle: "🔥 Tournaments & Events", newsTitle: "📰 KX Arena News & Info", walletTitle: "💳 Wallet & Transfers", postsTitle: "💬 Community Posts", voiceTitle: "🎙️ Voice Rooms", navNews: "News", navWallet: "Wallet", navEvents: "Events", navPosts: "Posts", navVoice: "Voice" }
-    };
-
-    function changeLanguage(lang) {
-      document.documentElement.dir = (lang === 'en') ? 'ltr' : 'rtl';
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (i18n[lang][key]) el.innerText = i18n[lang][key];
-      });
-    }
-
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-    // کارپێکردنی سەرەتایی
-    renderEvents();
-    renderPosts();
-    renderVoiceRooms();
-  </script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
