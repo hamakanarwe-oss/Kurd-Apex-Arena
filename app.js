@@ -5,8 +5,9 @@ let currentGeneratedOTP = "";
 let selectedReceiptFile = null;
 let selectedMediaData = null;
 let selectedMediaType = 'image';
+let isMicMuted = false;
+let isRoomLocked = false;
 
-// پڕکردنەوەی زانیارییە سەرەتاییەکان لە data.jsـەوە
 document.getElementById('fibNumberDisplay').innerText = KX_CONFIG.fibNumber;
 updateBalanceUI();
 
@@ -15,11 +16,13 @@ function updateBalanceUI() {
   document.getElementById('walletMainDisplay').innerText = balance.toLocaleString() + " IQD";
 }
 
-// ١. سیستەمی چوونەژوورەوە و ڤێریفای توند
+// ١. چوونەژوورەوە و ڤێریفای توند (Strict 6-Digit OTP)
 function goToStep2() {
   const email = document.getElementById('regEmail').value.trim();
   const pass = document.getElementById('regPass').value.trim();
-  if (!email.includes('@') || pass.length < 6) return alert('ئیمەیڵ و پاسۆرد (لانیکەم ٦ پیت) بنووسە.');
+  if (!email.includes('@') || pass.length < 6) {
+    return alert('تکایە ئیمەیڵێکی دروست و پاسۆردێک بنووسە کە لە ٦ پیت کەمتر نەبێت.');
+  }
   document.getElementById('authStep1').classList.add('hidden');
   document.getElementById('authStep2').classList.remove('hidden');
 }
@@ -27,7 +30,9 @@ function goToStep2() {
 function sendOTPCode() {
   const uname = document.getElementById('regUsername').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
-  if (!uname || phone.length < 7) return alert('ناوی یوزەر و ژمارە مۆبایل بنووسە.');
+  if (!uname || phone.length < 7) {
+    return alert('تکایە ناوی یوزەر و ژمارە مۆبایل بە دروستی بنووسە.');
+  }
   currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
   document.getElementById('generatedOtpDisplay').innerText = currentGeneratedOTP;
   document.getElementById('authStep2').classList.add('hidden');
@@ -35,10 +40,12 @@ function sendOTPCode() {
 }
 
 function completeAuth() {
-  if (document.getElementById('otpInput').value.trim() !== currentGeneratedOTP) {
+  const typed = document.getElementById('otpInput').value.trim();
+  if (typed !== currentGeneratedOTP) {
     document.getElementById('otpError').classList.remove('hidden');
     return;
   }
+  document.getElementById('otpError').classList.add('hidden');
   const uname = document.getElementById('regUsername').value.trim();
   document.getElementById('headerUsername').innerText = uname;
   document.getElementById('editUsernameInput').value = uname;
@@ -68,7 +75,7 @@ function saveProfile() {
   closeModal('profileModal');
 }
 
-// ٣. ڕادیۆی GTA VI
+// ٣. ڕادیۆی GTA VI (Blood In Your Eyes + گۆڕین + لابردنی خۆکار لە ڤۆیس کۆڵ)
 let trackIdx = 0;
 const radioAudio = new Audio(KX_CONFIG.tracks[0].url);
 radioAudio.loop = true;
@@ -117,31 +124,39 @@ function switchTab(tabName) {
   }
 }
 
-// ٥. جزدان و پسوولە
+// ٥. پڕکردنەوەی باڵانس تەنها بە پسوولەی FIB (Receipt Required)
 function previewReceipt(event) {
   selectedReceiptFile = event.target.files[0];
   if (selectedReceiptFile) {
-    document.getElementById('receiptFileName').innerText = "✅ " + selectedReceiptFile.name;
+    document.getElementById('receiptFileName').innerText = "✅ پسوولە: " + selectedReceiptFile.name;
   }
 }
 
 function handleDeposit() {
   const amt = parseInt(document.getElementById('depositInput').value);
   const txId = document.getElementById('txRefInput').value.trim();
-  if (!amt || amt < 1000 || !txId || !selectedReceiptFile) {
-    return alert('تکایە بڕی پارە، ژمارەی مامەڵە، و وێنەی پسوولەی FIB دابنێ!');
-  }
+
+  if (!amt || amt < 1000) return alert('بڕی پارەکە بنووسە (کەمترین بڕ ١,٠٠٠ دینارە).');
+  if (!txId || txId.length < 4) return alert('ژمارەی مامەڵە (Transaction ID) بنووسە.');
+  if (!selectedReceiptFile) return alert('ناتوانیت باڵانس زیاد بکەیت بێ بارکردنی وێنەی پسوولەی FIB!');
+
+  const lang = document.getElementById('langSelect').value;
+  const pendingTxt = translations[lang].pendingReview;
+
   document.getElementById('receiptsHistory').innerHTML = `
     <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex justify-between items-center text-[11px]">
-      <div><span class="font-bold text-white block">FIB: ${amt.toLocaleString()} IQD</span><span class="text-gray-400 font-mono">#${txId}</span></div>
-      <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">لە ژێر پشکنیندایە</span>
+      <div>
+        <span class="font-bold text-white block">FIB: ${amt.toLocaleString()} IQD</span>
+        <span class="text-gray-400 font-mono">TX: #${txId}</span>
+      </div>
+      <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">${pendingTxt}</span>
     </div>` + document.getElementById('receiptsHistory').innerHTML;
 
   document.getElementById('depositInput').value = '';
   document.getElementById('txRefInput').value = '';
   selectedReceiptFile = null;
-  document.getElementById('receiptFileName').innerText = 'وێنەی پسوولەی FIB هەڵبژێرە';
-  alert('پسوولەکەت تۆمارکرا و دوای پشکنین باڵانس زیاد دەبێت.');
+  document.getElementById('receiptFileName').innerText = translations[lang].uploadReceipt;
+  alert('پسوولەکەت تۆمارکرا! دوای پشکنینی لەلایەن ئەدمینەوە باڵانسەکەت بۆ زیاد دەکرێت.');
 }
 
 function handleTransfer() {
@@ -150,13 +165,15 @@ function handleTransfer() {
   if (!user || !amt || amt > balance) return alert('زانیارییەکان هەڵەن یان باڵانس بەش ناکات.');
   balance -= amt;
   updateBalanceUI();
+  document.getElementById('transferUser').value = '';
+  document.getElementById('transferAmount').value = '';
   alert(`بڕی ${amt.toLocaleString()} IQD حەواڵە کرا بۆ ${user}`);
 }
 
-// ٦. پیشاندانی ئیڤێنتەکان و هەواڵەکان لە data.js
+// ٦. ئیڤێنتەکان و ژماردنی پێچەوانە
 function renderEvents() {
-  const container = document.getElementById('eventsContainer');
-  container.innerHTML = KX_CONFIG.events.map(ev => `
+  const lang = document.getElementById('langSelect').value;
+  document.getElementById('eventsContainer').innerHTML = KX_CONFIG.events.map(ev => `
     <div class="glass-card rounded-2xl overflow-hidden neon-glow">
       <div class="relative h-44">
         <img src="${ev.image}" class="w-full h-full object-cover">
@@ -169,11 +186,17 @@ function renderEvents() {
       </div>
       <div class="p-4 space-y-3">
         <div class="bg-black/50 border border-purple-800/60 rounded-xl p-2 text-center">
+          <span class="block text-[9px] text-gray-400 mb-0.5">${translations[lang].timeRemaining}</span>
           <span id="timer-${ev.id}" class="font-mono text-xs font-black text-pink-400" dir="ltr">--:--:--</span>
         </div>
         <div class="flex items-center justify-between">
-          <div><span class="block text-[10px] text-gray-400">خەڵات</span><span class="text-sm font-black text-emerald-400">${ev.prize}</span></div>
-          <button onclick="joinEvent(${ev.entry})" class="vice-gradient px-4 py-2 rounded-xl text-xs font-black">بەشداریکردن (${ev.entry.toLocaleString()} IQD)</button>
+          <div>
+            <span class="block text-[10px] text-gray-400">${translations[lang].prizeLabel}</span>
+            <span class="text-sm font-black text-emerald-400">${ev.prize}</span>
+          </div>
+          <button onclick="joinEvent(${ev.entry})" class="vice-gradient px-4 py-2 rounded-xl text-xs font-black">
+            ${translations[lang].joinBtn} (${ev.entry.toLocaleString()} IQD)
+          </button>
         </div>
       </div>
     </div>
@@ -213,14 +236,15 @@ function joinEvent(cost) {
   alert('بە سەرکەوتوویی تۆمارکرایت لە خولەکەدا!');
 }
 
-// ٧. پۆستی وێنە و ڤیدیۆ
+// ٧. پۆستی وێنە و ڤیدیۆ (Media Feed)
 const mediaPosts = [{
   user: "KurdApex_Pro",
   avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80",
   type: "image",
   mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80",
-  caption: "ئامادەکارییەکان بۆ خولی گەورەی ئەم هەفتەیە 🔥🏆",
-  likes: 48
+  caption: "ئامادەکارییەکان بۆ خولی گەورەی ئەم هەفتەیە",
+  likes: 48,
+  comments: ["شازە!", "بەهیوای سەرکەوتن"]
 }];
 
 function handleMediaSelect(event) {
@@ -234,49 +258,66 @@ function handleMediaSelect(event) {
 }
 
 function publishMediaPost() {
-  if (!selectedMediaData) return alert('وێنە یان ڤیدیۆ هەڵبژێرە!');
+  if (!selectedMediaData) return alert('تکایە وێنە یان ڤیدیۆیەک هەڵبژێرە!');
   mediaPosts.unshift({
     user: document.getElementById('headerUsername').innerText,
     avatar: document.getElementById('headerAvatar').src,
     type: selectedMediaType,
     mediaUrl: selectedMediaData,
-    caption: document.getElementById('postCaptionInput').value.trim() || "کلیپێکی نوێ",
-    likes: 1
+    caption: document.getElementById('postCaptionInput').value.trim() || "KX Arena Highlight",
+    likes: 1,
+    comments: []
   });
   selectedMediaData = null;
+  document.getElementById('postCaptionInput').value = '';
   closeModal('newPostModal');
   renderMediaFeed();
 }
 
+function addCommentToPost(idx) {
+  const txt = prompt("کۆمێنتەکەت بنووسە:");
+  if (!txt) return;
+  mediaPosts[idx].comments.push(txt);
+  renderMediaFeed();
+}
+
 function renderMediaFeed() {
+  const lang = document.getElementById('langSelect').value;
   document.getElementById('postsFeed').innerHTML = mediaPosts.map((p, idx) => `
     <div class="glass-card rounded-2xl overflow-hidden">
       <div class="p-3 flex items-center gap-2.5">
         <img src="${p.avatar}" class="w-8 h-8 rounded-full object-cover border border-pink-500">
         <span class="text-xs font-bold text-white">${p.user}</span>
       </div>
-      ${p.type === 'video' ? `<video src="${p.mediaUrl}" controls class="w-full max-h-80 object-cover bg-black"></video>` : `<img src="${p.mediaUrl}" class="w-full max-h-80 object-cover">`}
+      ${p.type === 'video' ? `<video src="${p.mediaUrl}" controls playsinline class="w-full max-h-96 object-cover bg-black"></video>` : `<img src="${p.mediaUrl}" class="w-full max-h-96 object-cover">`}
       <div class="p-3 space-y-2">
         <p class="text-xs text-gray-200">${p.caption}</p>
-        <button onclick="mediaPosts[${idx}].likes++; renderMediaFeed()" class="flex items-center gap-1 text-pink-400 font-bold text-xs">
-          <i data-lucide="heart" class="w-4 h-4 fill-pink-500"></i> <span>${p.likes}</span>
-        </button>
+        <div class="flex items-center gap-5 pt-2 border-t border-purple-900/40 text-xs">
+          <button onclick="mediaPosts[${idx}].likes++; renderMediaFeed()" class="flex items-center gap-1.5 text-pink-400 font-bold">
+            <i data-lucide="heart" class="w-4 h-4 fill-pink-500"></i> <span>${p.likes}</span>
+          </button>
+          <button onclick="addCommentToPost(${idx})" class="flex items-center gap-1.5 text-gray-300">
+            <i data-lucide="message-circle" class="w-4 h-4"></i> <span>${p.comments.length} ${translations[lang].commentBtn}</span>
+          </button>
+        </div>
+        ${p.comments.length ? `<div class="bg-black/30 rounded-xl p-2 space-y-1 text-[11px] text-gray-300">${p.comments.map(c => `<div>• ${c}</div>`).join('')}</div>` : ''}
       </div>
     </div>
   `).join('');
   lucide.createIcons();
 }
 
-// ٨. ژوورە دەنگییەکان
+// ٨. ژوورە دەنگییە پڕۆفیشناڵەکان (Voice Rooms + Chat + Mic + Lock + Raise Hand)
 function renderVoiceRooms() {
+  const lang = document.getElementById('langSelect').value;
   document.getElementById('voiceRoomsList').innerHTML = KX_CONFIG.voiceRooms.map(r => `
     <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
       <div>
         <span class="text-[9px] bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded font-bold">${r.tag}</span>
         <h3 class="text-xs font-bold text-white mt-1">${r.name}</h3>
-        <span class="text-[10px] text-emerald-400">● ${r.count} یاریزان</span>
+        <span class="text-[10px] text-emerald-400">● ${r.count} ${translations[lang].playersOnline}</span>
       </div>
-      <button onclick="joinVoiceRoom('${r.name}')" class="vice-gradient px-3.5 py-2 rounded-xl text-xs font-bold">چوونە ژوورەوە</button>
+      <button onclick="joinVoiceRoom('${r.name}')" class="vice-gradient px-3.5 py-2 rounded-xl text-xs font-bold">${translations[lang].joinRoomBtn}</button>
     </div>
   `).join('');
 }
@@ -284,7 +325,7 @@ function renderVoiceRooms() {
 function createNewVoiceRoom() {
   const rName = prompt("ناوی ژوورە دەنگییە نوێیەکەت بنووسە:");
   if (!rName) return;
-  KX_CONFIG.voiceRooms.unshift({ name: rName, count: 1, tag: "New" });
+  KX_CONFIG.voiceRooms.unshift({ id: Date.now(), name: rName, count: 1, tag: "Live Room", locked: false });
   renderVoiceRooms();
   joinVoiceRoom(rName);
 }
@@ -292,6 +333,7 @@ function createNewVoiceRoom() {
 function joinVoiceRoom(name) {
   document.getElementById('activeRoomName').innerText = name;
   document.getElementById('activeVoicePanel').classList.remove('hidden');
+  document.getElementById('voiceChatMessages').innerHTML = `<div class="text-[10px] text-purple-300">بەخێربێیت بۆ ژووری ${name}</div>`;
 }
 
 function leaveVoiceRoom() {
@@ -299,15 +341,74 @@ function leaveVoiceRoom() {
 }
 
 function toggleMic(btn) {
-  btn.classList.toggle('text-emerald-400');
-  btn.classList.toggle('text-red-400');
+  isMicMuted = !isMicMuted;
+  const ring = document.getElementById('voiceMyAvatar');
+  if (isMicMuted) {
+    btn.classList.replace('text-emerald-400', 'text-red-400');
+    btn.querySelector('span').innerText = "Muted";
+    ring.classList.remove('speaking-ring');
+  } else {
+    btn.classList.replace('text-red-400', 'text-emerald-400');
+    btn.querySelector('span').innerText = "Mic On";
+    ring.classList.add('speaking-ring');
+  }
 }
 
-// ٩. زمانەکان
+function toggleRoomLock(btn) {
+  isRoomLocked = !isRoomLocked;
+  btn.classList.toggle('text-amber-400');
+  alert(isRoomLocked ? "ژوورەکە قفڵ کرا" : "ژوورەکە کرایەوە");
+}
+
+function sendVoiceChat() {
+  const input = document.getElementById('voiceChatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const myName = document.getElementById('headerUsername').innerText;
+  const box = document.getElementById('voiceChatMessages');
+  box.innerHTML += `<div class="text-[11px]"><strong class="text-pink-400">${myName}:</strong> <span class="text-gray-200">${msg}</span></div>`;
+  box.scrollTop = box.scrollHeight;
+  input.value = '';
+}
+
+// ٩. گۆڕینی تەواوەتی زمانەکان (کوردی، عەرەبی، ئینگلیزی)
 const translations = {
-  ku: { balance: "باڵانس", srvKurd: "سێرڤەری کوردی", srvIraq: "سێرڤەری عێراقی", srvEu: "سێرڤەری ئەوروپی", eventsTitle: "ئیڤێنت و پاڵەوانێتییەکان", newsTitle: "هەواڵ و زانیاری", walletTitle: "جزدانی دارایی", postsTitle: "کلیپ و وێنە", voiceTitle: "ژوورە دەنگییەکان", navNews: "هەواڵ", navWallet: "جزدان", navEvents: "ئیڤێنتەکان", navPosts: "پۆست", navVoice: "ژووری دەنگی" },
-  ar: { balance: "الرصيد", srvKurd: "سيرفر كردستان", srvIraq: "السيرفر العراقي", srvEu: "السيرفر الأوروبي", eventsTitle: "البطولات والأحداث", newsTitle: "الأخبار والمعلومات", walletTitle: "المحفظة المالية", postsTitle: "مقاطع وصور", voiceTitle: "الغرف الصوتية", navNews: "الأخبار", navWallet: "المحفظة", navEvents: "البطولات", navPosts: "المنشورات", navVoice: "غرف صوتية" },
-  en: { balance: "Balance", srvKurd: "Kurdistan Server", srvIraq: "Iraq Server", srvEu: "Europe Server", eventsTitle: "Tournaments & Events", newsTitle: "News & Info", walletTitle: "Wallet", postsTitle: "Media Feed", voiceTitle: "Voice Rooms", navNews: "News", navWallet: "Wallet", navEvents: "Events", navPosts: "Feed", navVoice: "Voice" }
+  ku: {
+    balance: "باڵانس", srvKurd: "سێرڤەری کوردی", srvIraq: "سێرڤەری عێراقی", srvEu: "سێرڤەری ئەوروپی",
+    eventsTitle: "ئیڤێنت و پاڵەوانێتییەکان", newsTitle: "هەواڵ و زانیاری", walletTitle: "جزدانی دارایی",
+    postsTitle: "کلیپ و وێنە", voiceTitle: "ژوورە دەنگییەکان", navNews: "هەواڵ", navWallet: "جزدان",
+    navEvents: "ئیڤێنتەکان", navPosts: "پۆست", navVoice: "ژووری دەنگی", timeRemaining: "کاتی ماوە بۆ دەستپێکردن",
+    prizeLabel: "خەڵات", joinBtn: "بەشداریکردن", uploadReceipt: "وێنەی پسوولەی FIB هەڵبژێرە (پێویستە)",
+    submitDeposit: "ناردنی پسوولە بۆ پشکنین", pendingReview: "لە ژێر پشکنیندایە", sendTransfer: "ناردنی حەواڵە",
+    addMediaBtn: "بڵاوکردنەوە", commentBtn: "کۆمێنت", createRoomBtn: "دروستکردنی ژوور",
+    playersOnline: "یاریزان", joinRoomBtn: "چوونە ژوورەوە", leaveBtn: "دەرچوون",
+    profileSettings: "ڕێکخستنی پرۆفایل", saveBtn: "پاشەکەوتکردن", postModalTitle: "بڵاوکردنەوەی وێنە یان ڤیدیۆ",
+    selectMedia: "وێنە یان ڤیدیۆ هەڵبژێرە", publishBtn: "بڵاوکردنەوە"
+  },
+  ar: {
+    balance: "الرصيد", srvKurd: "سيرفر كردستان", srvIraq: "السيرفر العراقي", srvEu: "السيرفر الأوروبي",
+    eventsTitle: "البطولات والأحداث", newsTitle: "الأخبار والمعلومات", walletTitle: "المحفظة المالية",
+    postsTitle: "مقاطع وصور", voiceTitle: "الغرف الصوتية", navNews: "الأخبار", navWallet: "المحفظة",
+    navEvents: "البطولات", navPosts: "المنشورات", navVoice: "غرف صوتية", timeRemaining: "الوقت المتبقي للبدء",
+    prizeLabel: "الجائزة", joinBtn: "مشاركة", uploadReceipt: "اختر صورة إيصال FIB (إلزامي)",
+    submitDeposit: "إرسال الإيصال للمراجعة", pendingReview: "قيد المراجعة", sendTransfer: "إرسال التحويل",
+    addMediaBtn: "نشر ميديا", commentBtn: "تعليق", createRoomBtn: "إنشاء غرفة",
+    playersOnline: "لاعب", joinRoomBtn: "دخول الغرفة", leaveBtn: "مغادرة",
+    profileSettings: "إعدادات الملف الشخصي", saveBtn: "حفظ التغييرات", postModalTitle: "نشر صورة أو فيديو",
+    selectMedia: "اختر صورة أو فيديو", publishBtn: "نشر الآن"
+  },
+  en: {
+    balance: "Balance", srvKurd: "Kurdistan Server", srvIraq: "Iraq Server", srvEu: "Europe Server",
+    eventsTitle: "Tournaments & Events", newsTitle: "News & Info", walletTitle: "Financial Wallet",
+    postsTitle: "Clips & Media", voiceTitle: "Voice Rooms", navNews: "News", navWallet: "Wallet",
+    navEvents: "Events", navPosts: "Feed", navVoice: "Voice", timeRemaining: "Starts In",
+    prizeLabel: "Prize Pool", joinBtn: "Join Now", uploadReceipt: "Upload FIB Receipt (Required)",
+    submitDeposit: "Submit Receipt", pendingReview: "Pending Review", sendTransfer: "Send Transfer",
+    addMediaBtn: "Post Media", commentBtn: "Comments", createRoomBtn: "Create Room",
+    playersOnline: "Online", joinRoomBtn: "Join Room", leaveBtn: "Leave",
+    profileSettings: "Profile Settings", saveBtn: "Save Changes", postModalTitle: "Upload Photo or Video",
+    selectMedia: "Select Photo or Video", publishBtn: "Publish"
+  }
 };
 
 function changeLanguage(lang) {
@@ -317,6 +418,9 @@ function changeLanguage(lang) {
     if (translations[lang][key]) el.innerText = translations[lang][key];
   });
   changeServer(document.getElementById('serverSelect').value);
+  renderEvents();
+  renderMediaFeed();
+  renderVoiceRooms();
 }
 
 function changeServer(srv) {
@@ -333,4 +437,3 @@ renderNews();
 renderMediaFeed();
 renderVoiceRooms();
 lucide.createIcons();
-
