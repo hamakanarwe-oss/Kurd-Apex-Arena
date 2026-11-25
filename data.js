@@ -7,10 +7,16 @@ const KX_CONFIG = {
   initialBalance: 10000,
 
   tracks: [
-    { title: "Blood In Your Eyes", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-    { title: "Love Is A Long Road", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-    { title: "Hot Together (Vice)", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
+    { 
+      title: "GTA San Andreas - Theme Song", 
+      url: "gta.mp3" 
+    },
+    { 
+      title: "GTA Vice City - Self Control", 
+      url: "vice_city.mp3" 
+    }
   ],
+
 
   events: [
     {
