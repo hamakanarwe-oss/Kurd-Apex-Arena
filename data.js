@@ -1,15 +1,17 @@
 const KX_CONFIG = {
+  // بەستنەوەی ڕاستەوخۆ بە داتابەیسی Supabase
+  supabaseUrl: "https://fovkxdwjzkljirbounyo.supabase.co",
+  supabaseKey: "sb_publishable_DaUwopkEWmNmt5WS-nOx-g_DTn39Dtq",
+
   fibNumber: "0770 000 0000",
   initialBalance: 10000,
 
-  // ١. گۆرانییەکانی ڕادیۆی GTA VI (دەتوانیت لینکی MP3 یان فایلی song1.mp3 دابنێیت)
   tracks: [
     { title: "Blood In Your Eyes", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
     { title: "Love Is A Long Road", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
     { title: "Hot Together (Vice)", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
   ],
 
-  // ٢. ئیڤێنت و پاڵەوانێتییەکان بە وێنە و کاتژمێری ژماردنی پێچەوانە
   events: [
     {
       id: 1,
@@ -33,7 +35,6 @@ const KX_CONFIG = {
     }
   ],
 
-  // ٣. هەواڵەکان
   news: [
     {
       tag: "OFFICIAL",
@@ -43,9 +44,8 @@ const KX_CONFIG = {
     }
   ],
 
-  // ٤. ژوورە دەنگییەکان
   voiceRooms: [
-    { id: 1, name: "ژووری گشتی یاریزانانی کورد", count: 18, tag: "PUBG & Chill", locked: false },
-    { id: 2, name: "ژووری سکوادەکانی Erangel", count: 9, tag: "Competitive", locked: false }
+    { id: 1, name: "ژووری گشتی یاریزانانی کورد", count: 18, tag: "PUBG & Chill" },
+    { id: 2, name: "ژووری سکوادەکانی Erangel", count: 9, tag: "Competitive" }
   ]
 };
