@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KX Arena | Kurd Apex Arena</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: #090D16;
+      color: #F8FAFC;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .gold-gradient {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    }
+    .card-bg {
+      background: #111827;
+      border: 1px solid #1F2937;
+    }
+    .glow-gold {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24">
+
+  <!-- سەرپەڕە و لۆگۆ و جزدان (Header) -->
+  <header class="sticky top-0 z-40 bg-[#090D16]/90 backdrop-blur-md border-b border-gray-800 px-4 py-3">
+    <div class="max-w-3xl mx-auto flex items-center justify-between">
+      
+      <!-- لۆگۆی SVGـی تایبەت بە KX Arena -->
+      <div class="flex items-center gap-3">
+        <svg width="46" height="46" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-lg">
+          <path d="M50 4L92 22V52C92 77 73 92 50 98C27 92 8 77 8 52V22L50 4Z" fill="#111827" stroke="#F59E0B" stroke-width="6"/>
+          <path d="M50 14L82 28V50C82 69 67 81 50 86C33 81 18 69 18 50V28L50 14Z" fill="url(#goldGrad)" fill-opacity="0.18"/>
+          <text x="50" y="61" text-anchor="middle" fill="#F59E0B" font-family="Arial Black, sans-serif" font-weight="900" font-size="30" letter-spacing="1">KX</text>
+          <path d="M36 24L43 31L50 20L57 31L64 24L61 35H39L36 24Z" fill="#F59E0B"/>
+          <defs>
+            <linearGradient id="goldGrad" x1="18" y1="14" x2="82" y2="86" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#F59E0B"/>
+              <stop offset="1" stop-color="#B45309"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="text-xl font-black tracking-wider text-white leading-none">KX <span class="text-amber-400">ARENA</span></h1>
+          <p class="text-[10px] text-gray-400 font-bold tracking-widest mt-1">KURD APEX ARENA</p>
+        </div>
+      </div>
+
+      <!-- جزدان (Wallet) -->
+      <button onclick="openModal('walletModal')" class="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 border border-emerald-500/40 px-3.5 py-2 rounded-xl transition">
+        <div class="text-right">
+          <span class="block text-[10px] text-gray-400">باڵانسی جزدان</span>
+          <span id="walletBalance" class="text-sm font-bold text-emerald-400">10,000 IQD</span>
+        </div>
+        <span class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">+</span>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ناوەڕۆکی سەرەکی -->
+  <main class="max-w-3xl mx-auto px-4 pt-5 space-y-6">
+
+    <!-- بانەری سەرەکی -->
+    <div class="relative overflow-hidden rounded-2xl card-bg p-5 border-amber-500/30 glow-gold">
+      <div class="relative z-10">
+        <span class="inline-block bg-amber-500/20 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full mb-2">🔥 لووتکەی پاڵەوانێتییەکان</span>
+        <h2 class="text-xl sm:text-2xl font-black text-white">یاری بکە، بیبەرەوە، خەڵاتەکەت بە FIB وەربگرە!</h2>
+        <p class="text-xs sm:text-sm text-gray-400 mt-1.5">هەموو خولەکانی KX Arena بە زیرەکی دەستکرد (AI) و بێ چاوەڕوانی بەڕێوەدەچن.</p>
+      </div>
+    </div>
+
+    <!-- فلتەری یارییەکان -->
+    <div class="flex gap-2 overflow-x-auto pb-1">
+      <button onclick="filterGames('all')" class="filter-btn bg-amber-500 text-gray-950 font-bold text-xs px-4 py-2 rounded-xl">هەمووی</button>
+      <button onclick="filterGames('PUBG')" class="filter-btn bg-gray-800 text-gray-300 font-bold text-xs px-4 py-2 rounded-xl">PUBG Mobile</button>
+      <button onclick="filterGames('eFootball')" class="filter-btn bg-gray-800 text-gray-300 font-bold text-xs px-4 py-2 rounded-xl">eFootball</button>
+    </div>
+
+    <!-- لیستی خولە چالاکەکان -->
+    <div id="tournamentList" class="space-y-4"></div>
+
+  </main>
+
+  <!-- پەنجەرەی پڕکردنەوەی باڵانس (FIB Top-Up Modal) -->
+  <div id="walletModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="card-bg w-full max-w-md rounded-2xl p-5 space-y-4 border-emerald-500/30">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+        <h3 class="text-lg font-bold text-white">پڕکردنەوەی جزدان بە FIB</h3>
+        <button onclick="closeModal('walletModal')" class="text-gray-400 hover:text-white text-xl">&times;</button>
+      </div>
+      
+      <div class="bg-gray-900 p-3.5 rounded-xl border border-gray-800 text-xs space-y-2">
+        <p class="text-gray-300">١. بڕی پارەکە بنێرە بۆ ئەم ژمارە <span class="text-emerald-400 font-bold">FIB</span>ـە:</p>
+        <div class="flex items-center justify-between bg-black/50 p-2.5 rounded-lg">
+          <span class="font-mono text-base font-bold text-amber-400" dir="ltr">0770 000 0000</span>
+          <button onclick="alert('ژمارەکە کۆپی کرا!')" class="text-xs bg-gray-800 px-2.5 py-1 rounded text-gray-300">کۆپی</button>
+        </div>
+        <p class="text-gray-400">٢. وێنەی وەسڵی ناردنەکە لێرە دابنێ تا AI بیپشکنێت:</p>
+      </div>
+
+      <div class="space-y-3">
+        <input type="number" id="depositAmount" placeholder="بڕی پارەی نێردراو (نموونە: 5000)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <label class="block border-2 border-dashed border-gray-700 rounded-xl p-4 text-center cursor-pointer hover:border-emerald-500 transition">
+          <span class="text-xs text-gray-400">📸 کلیک بکە بۆ هەڵبژاردنی وێنەی وەسڵی FIB</span>
+          <input type="file" accept="image/*" class="hidden" onchange="alert('وەسڵەکە ئامادەیە بۆ پشکنینی AI!')">
+        </label>
+        <button onclick="simulateDeposit()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black py-3 rounded-xl text-sm transition">
+          ناردنی وەسڵ و زیادکردنی باڵانس
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- پەنجەرەی کۆدی ڕووم و ناردنی ئەنجام -->
+  <div id="roomModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="card-bg w-full max-w-md rounded-2xl p-5 space-y-4 border-amber-500/30">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+        <h3 id="modalTitle" class="text-base font-bold text-amber-400">ژووری یاری</h3>
+        <button onclick="closeModal('roomModal')" class="text-gray-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div id="roomCodeSection" class="bg-gray-900 p-3.5 rounded-xl border border-gray-800 space-y-2.5">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-white">کۆد و پاسۆردی ڕووم</span>
+          <span id="roomStatusBadge" class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">چاوەڕێی دروستکەرە</span>
+        </div>
+        <div id="createRoomForm" class="space-y-2">
+          <p class="text-[11px] text-gray-400">کێ Room Cardـی هەیە؟ یەکەم کەس بینووسێت قوفڵ دەبێت و ٥٠٠ دینار پاداشت وەردەگرێت:</p>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="inputRoomId" placeholder="Room ID" class="bg-black/60 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-white">
+            <input type="text" id="inputRoomPass" placeholder="Password" class="bg-black/60 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-white">
+          </div>
+          <button onclick="lockRoomCode()" class="w-full gold-gradient text-gray-950 font-bold py-2 rounded-lg text-xs">قوفڵکردن و بڵاوکردنەوەی کۆد</button>
+        </div>
+        <div id="lockedRoomDisplay" class="hidden bg-black/60 p-3 rounded-lg border border-emerald-500/40 text-center space-y-1">
+          <p class="text-[10px] text-emerald-400">🔒 ڕوومەکە قوفڵ کراوە (کەس ناتوانێت بیگۆڕێت)</p>
+          <p id="displayRoomInfo" class="font-mono text-sm font-bold text-white"></p>
+        </div>
+      </div>
+
+      <div class="bg-gray-900 p-3.5 rounded-xl border border-gray-800 space-y-2.5">
+        <span class="block text-xs font-bold text-white">🤖 ناردنی ئەنجام بۆ دادوەری AI</span>
+        <p class="text-[11px] text-gray-400">کۆدی نهێنی ناو ناوی ڕووم: <span class="font-mono text-amber-400 font-bold">KXA-749</span></p>
+        <label class="block border border-dashed border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:border-amber-400">
+          <span class="text-xs text-gray-300">📤 بارکردنی وێنەی ئەنجام (Screenshot)</span>
+          <input type="file" accept="image/*" class="hidden" onchange="verifyResultAI()">
+        </label>
+        <p id="aiFeedback" class="text-xs text-emerald-400 hidden"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- شریتی خوارەوە -->
+  <nav class="fixed bottom-0 inset-x-0 bg-[#0D1320]/95 backdrop-blur-md border-t border-gray-800 py-2.5 px-6 z-40">
+    <div class="max-w-3xl mx-auto flex justify-around text-xs font-bold">
+      <button class="text-amber-400 flex flex-col items-center gap-1">
+        <span>🏆</span>
+        <span>خولەکان</span>
+      </button>
+      <button onclick="openModal('walletModal')" class="text-gray-400 hover:text-white flex flex-col items-center gap-1">
+        <span>💳</span>
+        <span>جزدان</span>
+      </button>
+      <button onclick="alert('یاساکانی دژە-فێڵی KX Arena: هەر وێنەیەکی فۆتۆشۆپ دەبێتە هۆی بلۆککردنی ئەکاونت.')" class="text-gray-400 hover:text-white flex flex-col items-center gap-1">
+        <span>🛡️</span>
+        <span>یاساکان</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    let balance = 10000;
+    const tournaments = [
+      {
+        id: 101,
+        game: "PUBG",
+        title: "PUBG TDM 1v1 - پاڵەوانێتی خێرا",
+        entry: 2000,
+        prize: 3500,
+        players: 1,
+        maxPlayers: 2,
+        time: "کاتژمێر ٩:٠٠ی شەو",
+        joined: false
+      },
+      {
+        id: 102,
+        game: "PUBG",
+        title: "PUBG Solo Erangel - گۆڕەپانی مەزن",
+        entry: 3000,
+        prize: 120000,
+        players: 42,
+        maxPlayers: 50,
+        time: "کاتژمێر ١٠:٠٠ی شەو",
+        joined: false
+      },
+      {
+        id: 103,
+        game: "eFootball",
+        title: "eFootball Mobile 1v1 - جامی KX Arena",
+        entry: 5000,
+        prize: 9000,
+        players: 1,
+        maxPlayers: 2,
+        time: "ئێستا دەست پێ دەکات",
+        joined: false
+      }
+    ];
+
+    function formatIQD(num) {
+      return num.toLocaleString('en-US') + " IQD";
+    }
+
+    function updateBalanceUI() {
+      document.getElementById('walletBalance').innerText = formatIQD(balance);
+    }
+
+    function renderTournaments(filter = 'all') {
+      const list = document.getElementById('tournamentList');
+      list.innerHTML = '';
+
+      tournaments
+        .filter(t => filter === 'all' || t.game === filter)
+        .forEach(t => {
+          const percent = Math.round((t.players / t.maxPlayers) * 100);
+          const card = document.createElement('div');
+          card.className = 'card-bg rounded-2xl p-4 space-y-3 transition hover:border-gray-700';
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-800 text-amber-400">${t.game}</span>
+                <h3 class="text-base font-bold text-white mt-1">${t.title}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">⏰ ${t.time}</p>
+              </div>
+              <div class="text-left bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                <span class="block text-[10px] text-amber-300">خەڵاتی براوە</span>
+                <span class="text-sm font-black text-amber-400">${formatIQD(t.prize)}</span>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs text-gray-400">
+                <span>یاریزانە بەشداربووەکان</span>
+                <span class="text-white font-bold">${t.players} / ${t.maxPlayers}</span>
+              </div>
+              <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div class="gold-gradient h-full transition-all" style="width: ${percent}%"></div>
+              </div>
+            </div>
+
+            <div class="pt-1 flex items-center justify-between gap-3">
+              <div>
+                <span class="block text-[10px] text-gray-400">نرخی بەشداری</span>
+                <span class="text-sm font-bold text-white">${formatIQD(t.entry)}</span>
+              </div>
+              ${t.joined 
+                ? `<button onclick="openRoomModal('${t.title}')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black py-2.5 rounded-xl text-xs transition">چوونە ژوورەوە و ناردنی ئەنجام</button>`
+                : `<button onclick="joinTournament(${t.id})" class="flex-1 gold-gradient hover:opacity-90 text-gray-950 font-black py-2.5 rounded-xl text-xs transition">بەشداریکردن لە خولەکە</button>`
+              }
+            </div>
+          `;
+          list.appendChild(card);
+        });
+    }
+
+    function joinTournament(id) {
+      const t = tournaments.find(item => item.id === id);
+      if (!t || t.joined) return;
+      if (balance < t.entry) {
+        alert('باڵانسی پێویستت نییە! تکایە جزدانەکەت لە ڕێگەی FIB پڕ بکەرەوە.');
+        openModal('walletModal');
+        return;
+      }
+      balance -= t.entry;
+      t.players += 1;
+      t.joined = true;
+      updateBalanceUI();
+      renderTournaments();
+      alert('بە سەرکەوتوویی بەشداریت کرد! ئێستا دەتوانیت بچیتە ناو ژووری یارییەکە.');
+    }
+
+    function filterGames(game) {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-500', 'text-gray-950');
+        btn.classList.add('bg-gray-800', 'text-gray-300');
+      });
+      event.target.classList.remove('bg-gray-800', 'text-gray-300');
+      event.target.classList.add('bg-amber-500', 'text-gray-950');
+      renderTournaments(game);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function simulateDeposit() {
+      const amt = parseInt(document.getElementById('depositAmount').value);
+      if (!amt || amt < 1000) {
+        alert('تکایە بڕێکی دروست بنووسە (کەمترین بڕ ١,٠٠٠ دینارە).');
+        return;
+      }
+      balance += amt;
+      updateBalanceUI();
+      document.getElementById('depositAmount').value = '';
+      closeModal('walletModal');
+      alert(`وەسڵەکە لە لایەن AI پەسەند کرا! بڕی ${formatIQD(amt)} خرایە سەر جزدانەکەت.`);
+    }
+
+    function openRoomModal(title) {
+      document.getElementById('modalTitle').innerText = title;
+      openModal('roomModal');
+    }
+
+    function lockRoomCode() {
+      const rId = document.getElementById('inputRoomId').value.trim();
+      const rPass = document.getElementById('inputRoomPass').value.trim();
+      if (!rId || !rPass) {
+        alert('تکایە هەردوو خانەی Room ID و Password پڕ بکەرەوە.');
+        return;
+      }
+      document.getElementById('createRoomForm').classList.add('hidden');
+      document.getElementById('lockedRoomDisplay').classList.remove('hidden');
+      document.getElementById('roomStatusBadge').innerText = 'قوفڵدراوە (Lock)';
+      document.getElementById('displayRoomInfo').innerText = `ID: ${rId}  |  PASS: ${rPass}`;
+    }
+
+    function verifyResultAI() {
+      const feedback = document.getElementById('aiFeedback');
+      feedback.classList.remove('hidden');
+      feedback.innerText = '⏳ زیرەکی دەستکرد (AI) خەریکی پشکنینی وێنە و کۆدی KXA-749 و زانیارییەکانی فایلەکەیە...';
+      setTimeout(() => {
+        feedback.innerText = '✅ ئەنجامەکە پشتڕاست کرایەوە! پلەی یەکەمت بەدەستهێنا و خەڵاتەکە خرایە سەر جزدانەکەت.';
+        balance += 3500;
+        updateBalanceUI();
+      }, 2000);
+    }
+
+    renderTournaments();
+  </script>
+</body>
+</html>
