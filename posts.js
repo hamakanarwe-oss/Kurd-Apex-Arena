@@ -67,7 +67,6 @@ function addCommentToModulePost(idx) {
   renderPostsModule();
 }
 
-// پەیوەستکردن بە فەنکشنی گۆڕینی تابەکان تا هەمیشە دایبخات
 const origSwitchTabPosts = window.switchTab;
 window.switchTab = function(tabName) {
   if (origSwitchTabPosts) origSwitchTabPosts(tabName);
@@ -75,4 +74,3 @@ window.switchTab = function(tabName) {
 };
 
 renderPostsModule();
-
