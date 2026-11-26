@@ -7,15 +7,12 @@ const KX_CONFIG = {
   initialBalance: 10000,
 
   tracks: [
-    { 
-      title: "GTA San Andreas - Theme Song", 
-      url: "gta.mp3" 
-    },
-    { 
-      title: "GTA Vice City - Self Control", 
-      url: "vice_city.mp3" 
+    {
+      title: "Blood In Your Eyes",
+      url: "Tove Lo - Blood In Your Eyes.mp3"
     }
   ],
+
 
 
   events: [
