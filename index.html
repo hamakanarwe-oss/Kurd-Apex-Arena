@@ -34,6 +34,23 @@
       <div id="authErrorBox" class="hidden bg-red-500/20 border border-red-500/50 text-red-300 text-xs p-3 rounded-xl font-bold"></div>
       <div id="authLoader" class="hidden text-center text-xs text-pink-400 font-bold animate-pulse">تکایە چاوەڕێ بکە، پەیوەندی بە سێرڤەرەوە دەکرێت...</div>
 
+      <!-- دوگمەی چوونەژوورەوەی خێرا بە گووگڵ -->
+      <button onclick="loginWithGoogle()" class="w-full bg-white hover:bg-gray-100 text-gray-900 font-black py-3 rounded-xl text-xs flex items-center justify-center gap-2.5 shadow-lg transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+        </svg>
+        <span>چوونەژوورەوەی خێرا بە Google</span>
+      </button>
+
+      <div class="flex items-center gap-2 text-[10px] text-gray-500">
+        <div class="flex-1 h-px bg-purple-800/50"></div>
+        <span>یان بە ئیمەیڵ</span>
+        <div class="flex-1 h-px bg-purple-800/50"></div>
+      </div>
+
       <!-- فۆڕمی دروستکردنی هەژماری نوێ -->
       <div id="authRegisterBox" class="space-y-3">
         <input type="email" id="regEmail" placeholder="ئیمەیڵی ڕاستەقینە (بۆ ناردنی کۆدی ڤێریفای)" class="w-full bg-black/60 border border-purple-800/60 rounded-xl px-4 py-3 text-xs">
@@ -43,13 +60,13 @@
         <button onclick="registerRealAccount()" class="w-full vice-gradient font-black py-3 rounded-xl text-xs shadow-lg">دروستکردنی هەژمار و ناردنی کۆد</button>
         <p class="text-center text-xs text-gray-400 pt-1">پێشتر هەژمارت هەیە؟ <button onclick="toggleAuthMode('login')" class="text-pink-400 font-bold underline">چوونەژوورەوە</button></p>
       </div>
+
       <!-- فۆڕمی ڤێریفای ئیمەیڵ -->
       <div id="authVerifyBox" class="hidden space-y-4 text-center">
         <h2 class="text-sm font-black text-emerald-400">لینکی ڤێریفای نێردرا بۆ Gmailـەکەت!</h2>
         <p class="text-xs text-gray-300 leading-relaxed">بچۆ ناو ئیمەیڵەکەت (<span id="verifyEmailTarget" class="text-pink-400 font-bold"></span>) و کلیک لە دوگمەی <strong class="text-white">Confirm email address</strong> بکە، پاشان دوگمەی خوارەوە دابگرە:</p>
         <button onclick="toggleAuthMode('login')" class="w-full bg-emerald-500 text-gray-950 font-black py-3 rounded-xl text-xs">ڤێریفایم کرد — چوونەژوورەوە</button>
       </div>
-
 
       <!-- فۆڕمی چوونەژوورەوە (Login) -->
       <div id="authLoginBox" class="hidden space-y-3">
