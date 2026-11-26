@@ -6,16 +6,13 @@ const KX_CONFIG = {
   fibNumber: "0770 000 0000",
   initialBalance: 10000,
 
-  tracks: [
+    tracks: [
     {
       title: "Blood In Your Eyes",
-      url: "Tove Lo - Blood In Your Eyes.mp3"
+      url: "Tove Lo - Blood In Your Eyes (From Grand Theft Aut.m4a"
     }
   ],
 
-
-
-  events: [
     {
       id: 1,
       title: "PUBG Mobile Squad Championship",
