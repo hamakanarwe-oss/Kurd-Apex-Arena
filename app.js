@@ -1,3 +1,7 @@
+window.onerror = function(msg, url, line) {
+  alert("هەڵە: " + msg + "\nدێڕ: " + line);
+};
+
 lucide.createIcons();
 
 const sb = window.supabase.createClient(KX_CONFIG.supabaseUrl, KX_CONFIG.supabaseKey);
@@ -9,12 +13,25 @@ let selectedMediaData = null;
 let selectedMediaType = 'image';
 let isMicMuted = false;
 
-document.getElementById('fibNumberDisplay').innerText = KX_CONFIG.fibNumber;
+const fibEl = document.getElementById('fibNumberDisplay');
+if (fibEl) fibEl.innerText = KX_CONFIG.fibNumber;
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session && session.user) {
+    if (!currentUser || currentUser.id !== session.user.id) {
+      await loadUserProfile(session.user);
+    }
+  }
+});
 
 async function checkExistingSession() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await loadUserProfile(session.user);
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user) {
+      await loadUserProfile(session.user);
+    }
+  } catch (err) {
+    console.error("Session error:", err);
   }
 }
 
@@ -23,7 +40,7 @@ async function loginWithGoogle() {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://kx-arena.vercel.app'
+      redirectTo: window.location.origin
     }
   });
   if (error) {
@@ -64,7 +81,7 @@ async function registerRealAccount() {
     email: email,
     password: pass,
     options: {
-      emailRedirectTo: window.location.href,
+      emailRedirectTo: window.location.origin,
       data: { username: uname, phone: phoneNormalized }
     }
   });
@@ -106,44 +123,52 @@ async function createProfileRow(user, username, phone, avatarUrl = null) {
     balance: KX_CONFIG.initialBalance
   };
   if (avatarUrl) rowData.avatar_url = avatarUrl;
-  await sb.from('profiles').upsert(rowData);
+  const { error } = await sb.from('profiles').upsert(rowData);
+  if (error) console.error("Profile insert error:", error.message);
 }
 
 async function loadUserProfile(user) {
-  currentUser = user;
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  try {
+    currentUser = user;
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
 
-  if (profile) {
-    balance = profile.balance;
-    document.getElementById('headerUsername').innerText = profile.username;
-    document.getElementById('editUsernameInput').value = profile.username;
-    document.getElementById('voiceMyName').innerText = profile.username;
-    if (profile.avatar_url) {
-      document.getElementById('headerAvatar').src = profile.avatar_url;
-      document.getElementById('modalAvatar').src = profile.avatar_url;
-      document.getElementById('voiceMyAvatar').src = profile.avatar_url;
-    }
-  } else {
-    const meta = user.user_metadata || {};
-    const defaultName = meta.username || (meta.full_name ? meta.full_name.replace(/\s+/g, '_') : 'Player_' + Math.floor(Math.random()*999));
-    const defaultPhone = meta.phone || '0770' + Math.floor(1000000 + Math.random()*8999999);
-    const googleAvatar = meta.avatar_url || null;
+    if (profile) {
+      balance = profile.balance ?? KX_CONFIG.initialBalance;
+      document.getElementById('headerUsername').innerText = profile.username;
+      document.getElementById('editUsernameInput').value = profile.username;
+      document.getElementById('voiceMyName').innerText = profile.username;
+      if (profile.avatar_url) {
+        document.getElementById('headerAvatar').src = profile.avatar_url;
+        document.getElementById('modalAvatar').src = profile.avatar_url;
+        document.getElementById('voiceMyAvatar').src = profile.avatar_url;
+      }
+    } else {
+      const meta = user.user_metadata || {};
+      const cleanBase = meta.username || (meta.full_name ? meta.full_name.replace(/[^a-zA-Z0-9_]/g, '_') : 'Player');
+      const defaultName = cleanBase + '_' + Math.floor(100 + Math.random() * 899);
+      const defaultPhone = meta.phone || '0770' + Math.floor(1000000 + Math.random() * 8999999);
+      const googleAvatar = meta.avatar_url || meta.picture || null;
 
-    await createProfileRow(user, defaultName, defaultPhone, googleAvatar);
-    balance = KX_CONFIG.initialBalance;
-    document.getElementById('headerUsername').innerText = defaultName;
-    document.getElementById('editUsernameInput').value = defaultName;
-    document.getElementById('voiceMyName').innerText = defaultName;
-    if (googleAvatar) {
-      document.getElementById('headerAvatar').src = googleAvatar;
-      document.getElementById('modalAvatar').src = googleAvatar;
-      document.getElementById('voiceMyAvatar').src = googleAvatar;
+      await createProfileRow(user, defaultName, defaultPhone, googleAvatar);
+      balance = KX_CONFIG.initialBalance;
+      document.getElementById('headerUsername').innerText = defaultName;
+      document.getElementById('editUsernameInput').value = defaultName;
+      document.getElementById('voiceMyName').innerText = defaultName;
+      if (googleAvatar) {
+        document.getElementById('headerAvatar').src = googleAvatar;
+        document.getElementById('modalAvatar').src = googleAvatar;
+        document.getElementById('voiceMyAvatar').src = googleAvatar;
+      }
     }
+
+    updateBalanceUI();
+    await loadUserDeposits();
+  } catch (err) {
+    console.error("Load profile error:", err);
+  } finally {
+    setAuthLoading(false);
+    document.getElementById('authScreen').classList.add('hidden');
   }
-
-  updateBalanceUI();
-  await loadUserDeposits();
-  document.getElementById('authScreen').classList.add('hidden');
 }
 
 async function logoutAccount() {
@@ -159,7 +184,7 @@ function showAuthError(msg) {
 
 function setAuthLoading(isLoading) {
   document.getElementById('authLoader').classList.toggle('hidden', !isLoading);
-  document.getElementById('authErrorBox').classList.add('hidden');
+  if (isLoading) document.getElementById('authErrorBox').classList.add('hidden');
 }
 
 function toggleAuthMode(mode) {
@@ -298,7 +323,7 @@ async function handleTransfer() {
   const amt = parseInt(document.getElementById('transferAmount').value);
   if (!targetUser || !amt || amt < 1000 || amt > balance) return alert('زانیارییەکان هەڵەن یان باڵانس بەش ناکات.');
 
-  const { data: recipient } = await sb.from('profiles').select('id, balance').eq('username', targetUser).single();
+  const { data: recipient } = await sb.from('profiles').select('id, balance').eq('username', targetUser).maybeSingle();
   if (!recipient) return alert('ئەم ناوی یوزەرە بوونی نییە لە KX Arena!');
 
   balance -= amt;
